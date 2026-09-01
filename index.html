@@ -125,11 +125,38 @@ canvas{
 }
 .card h1{margin:0 0 8px;font-size:31px}
 .card p{margin:0 0 16px;color:var(--muted)}
-#shop{
-  display:grid;grid-template-columns:repeat(15,minmax(116px,1fr));gap:7px;
-  padding:9px;background:linear-gradient(180deg,#101722,#090e15);
-  border-top:1px solid #ffffff12;overflow-x:auto
+#shopPanel{
+  background:linear-gradient(180deg,#101722,#090e15);
+  border-top:1px solid #ffffff12;
+  box-shadow:0 -12px 36px #0006;
 }
+#shopTabs{
+  max-width:1040px;margin:0 auto;
+  display:flex;gap:6px;padding:7px 9px 0;
+}
+.shopTab{
+  min-height:34px;padding:7px 15px;
+  border-radius:10px 10px 4px 4px;
+  font-size:11px;font-weight:950;white-space:nowrap;
+  background:linear-gradient(180deg,#1b2638,#111a27);
+  color:#aab7c8;border-color:#ffffff12;
+}
+.shopTab.active{
+  color:#fff;
+  background:linear-gradient(180deg,#344965,#202e42);
+  border-color:#ffffff2d;
+  box-shadow:inset 0 1px #ffffff16;
+}
+#shop{
+  max-width:1040px;margin:0 auto;
+  padding:7px 9px 10px;
+}
+.shopGroup{
+  display:none;
+  grid-template-columns:repeat(auto-fit,minmax(135px,1fr));
+  gap:7px;
+}
+.shopGroup.active{display:grid}
 button{
   min-height:66px;padding:8px;border-radius:13px;border:1px solid #ffffff15;
   background:linear-gradient(180deg,#24334b,#172131);color:white;cursor:pointer;
@@ -139,13 +166,24 @@ button:hover{transform:translateY(-1px);border-color:#ffffff2f}
 button:active{transform:translateY(1px)}
 button:disabled{opacity:.38;filter:saturate(.45);cursor:not-allowed;transform:none}
 button .name{display:block;font-weight:950;font-size:12px}
-button .desc{display:block;font-size:10px;color:#b5c0d2;margin-top:2px}
+button .desc{
+  display:block;font-size:10px;color:#b5c0d2;margin-top:3px;
+  line-height:1.2;min-height:24px
+}
 button .price{display:block;font-size:11px;color:var(--gold);font-weight:950;margin-top:3px}
 .mainBtn{min-height:auto;padding:12px 19px;font-weight:900}
 @media(max-width:820px){
-  #shop{grid-template-columns:repeat(7,130px)}
+  #shopTabs{overflow-x:auto;justify-content:flex-start}
+  .shopTab{flex:0 0 auto}
+  .shopGroup{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .shopGroup button{min-height:62px}
   .pill{font-size:11px;padding:7px 9px}
   #message{font-size:12px;top:60px}
+}
+@media(max-width:520px){
+  #shopTabs{padding-left:6px;padding-right:6px}
+  #shop{padding-left:6px;padding-right:6px}
+  .shopGroup{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 </style>
 </head>
@@ -159,7 +197,7 @@ button .price{display:block;font-size:11px;color:var(--gold);font-weight:950;mar
         <div class="pill">🏰 Ворота: <span id="hp">300/300</span></div>
         <div class="pill">🌊 Хвиля: <span id="wave">1</span></div>
         <div class="pill">🍃 <span id="seasonLabel">Весна</span></div>
-        <div class="pill">🧱 Башти: <span id="towerHp">180/180</span></div>
+        <div class="pill" title="HP артилерійських платформ. При 0 HP вимикаються тільки балліста та катапульта.">🧱 Артилерія: <span id="towerHp">180/180</span></div>
         <div id="perkBar" class="perkBar"></div>
         <div class="pill">⚔️ <span id="eventLabel">Звичайна хвиля</span></div>
       </div>
@@ -199,22 +237,38 @@ button .price{display:block;font-size:11px;color:var(--gold);font-weight:950;mar
     </div>
   </div>
 
-  <div id="shop">
-    <button id="gateBtn" onclick="buyGate()"></button>
-    <button id="archerBtn" onclick="buyArcher()"></button>
-    <button id="archerUpBtn" onclick="upgradeArchers()"></button>
-    <button id="riverBtn" onclick="buyRiver()"></button>
-    <button id="lavaBtn" onclick="buyLava()"></button>
-    <button id="mageBtn" onclick="buyMage()"></button>
-    <button id="repairBtn" onclick="repairGate()"></button>
-    <button id="ballistaBtn" onclick="buyBallista()"></button>
-    <button id="catapultBtn" onclick="buyCatapult()"></button>
-    <button id="oilBtn" onclick="buyOil()"></button>
-    <button id="trapsBtn" onclick="buyTraps()"></button>
-    <button id="knightsBtn" onclick="deployKnights()"></button>
-    <button id="towerRepairBtn" onclick="repairTowers()"></button>
-    <button id="castleBtn" onclick="upgradeCastle()"></button>
-    <button id="techBtn" onclick="buyTech()"></button>
+  <div id="shopPanel">
+    <div id="shopTabs">
+      <button class="shopTab active" data-tab="army" onclick="setShopTab('army')">⚔️ Війська</button>
+      <button class="shopTab" data-tab="defense" onclick="setShopTab('defense')">🛡️ Оборона</button>
+      <button class="shopTab" data-tab="castle" onclick="setShopTab('castle')">🏰 Фортеця</button>
+    </div>
+
+    <div id="shop">
+      <div class="shopGroup active" data-shop-group="army">
+        <button id="archerBtn" onclick="buyArcher()"></button>
+        <button id="archerUpBtn" onclick="upgradeArchers()"></button>
+        <button id="mageBtn" onclick="buyMage()"></button>
+        <button id="knightsBtn" onclick="deployKnights()"></button>
+        <button id="techBtn" onclick="buyTech()"></button>
+      </div>
+
+      <div class="shopGroup" data-shop-group="defense">
+        <button id="riverBtn" onclick="buyRiver()"></button>
+        <button id="lavaBtn" onclick="buyLava()"></button>
+        <button id="oilBtn" onclick="buyOil()"></button>
+        <button id="trapsBtn" onclick="buyTraps()"></button>
+        <button id="gateBtn" onclick="buyGate()"></button>
+        <button id="repairBtn" onclick="repairGate()"></button>
+      </div>
+
+      <div class="shopGroup" data-shop-group="castle">
+        <button id="ballistaBtn" onclick="buyBallista()"></button>
+        <button id="catapultBtn" onclick="buyCatapult()"></button>
+        <button id="towerRepairBtn" onclick="repairTowers()"></button>
+        <button id="castleBtn" onclick="upgradeCastle()"></button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -371,6 +425,15 @@ function newGame(){
   updateShop();
   syncHUD();
 }
+function setShopTab(tab){
+  document.querySelectorAll('.shopTab').forEach(btn=>{
+    btn.classList.toggle('active',btn.dataset.tab===tab);
+  });
+  document.querySelectorAll('.shopGroup').forEach(group=>{
+    group.classList.toggle('active',group.dataset.shopGroup===tab);
+  });
+}
+
 function setGameSpeed(speed){
   gameSpeed=speed;
   document.querySelectorAll('.speedBtn').forEach(btn=>{
@@ -807,7 +870,7 @@ function update(dt){
   if(game.towerHp<=0&&!game.towerDestroyedNotified){
     game.towerHp=0;
     game.towerDestroyedNotified=true;
-    showMsg('💥 Башти зруйновано — відбудуй їх, щоб повернути всіх куплених захисників');
+    showMsg('💥 Артилерійські платформи зруйновано — балліста й катапульта вимкнені');
   }
 
   // ambient
@@ -853,7 +916,7 @@ function update(dt){
   }
 
   // archers
-  for(let i=0;i<(game.towerHp>0?game.archers:0);i++){
+  for(let i=0;i<game.archers;i++){
     archerTimers[i]-=dt*(game.archerSlow>0?.62:1);
     if(archerTimers[i]<=0){
       fireArrow(i);
@@ -994,7 +1057,7 @@ function update(dt){
   }
 
   // mage
-  if(game.mage&&game.towerHp>0){
+  if(game.mage){
     game.mageCooldown-=dt;
     if(game.mageCooldown<=0)castMage();
   }
@@ -1461,12 +1524,10 @@ function repairTowers(){
 
     game.towerHp=Math.round(game.towerMax*.75);
     game.towerDestroyedNotified=false;
-    archerTimers=[0,0,0];
-    game.mageCooldown=.6;
     game.ballistaTimer=.5;
     game.catapultTimer=.8;
 
-    showMsg('🏗️ Башти відбудовано — лучники, маг, балліста й катапульта повернулися');
+    showMsg('🏗️ Артилерійські платформи відбудовано — балліста й катапульта знову працюють');
     updateShop();
     return;
   }
@@ -1635,7 +1696,7 @@ function updateShop(){
   setBtn(
     'archerBtn',
     game.archers<3?`🏹 Лучник ${game.archers}/3`:'🏹 Лучники 3/3',
-    game.towerHp<=0?'збережений • повернеться після відбудови':'авто-стрільба',
+    'авто-стрільба • працює незалежно від артилерії',
     game.archers<3?`🪙 ${archerCost()}`:'MAX',
     game.archers>=3
   );
@@ -1645,12 +1706,22 @@ function updateShop(){
   setBtn(
     'mageBtn',
     game.mage?`🧙 Маг Lv.${game.mageLevel}`:'🧙 Маг',
-    game.towerHp<=0?'збережений • повернеться після відбудови':'грозова хмара',
+    'грозова хмара • працює незалежно від артилерії',
     `🪙 ${mageCost()}`
   );
   setBtn('repairBtn','🔨 Ремонт','55% • дуже дорогий',`🪙 ${repairCost()}`);
-  setBtn('ballistaBtn',game.ballista?`🎯 Балліста Lv.${game.ballista}`:'🎯 Балліста','пробивний постріл',`🪙 ${game.ballista?260+game.ballista*180:330}`);
-  setBtn('catapultBtn',game.catapult?`🪨 Катапульта Lv.${game.catapult}`:'🪨 Катапульта','удар по площі',`🪙 ${game.catapult?310+game.catapult*220:420}`);
+  setBtn(
+    'ballistaBtn',
+    game.ballista?`🎯 Балліста Lv.${game.ballista}`:'🎯 Балліста',
+    game.towerHp<=0?'ВИМКНЕНА • відбудуй артилерію':'великий пробивний болт',
+    `🪙 ${game.ballista?260+game.ballista*180:330}`
+  );
+  setBtn(
+    'catapultBtn',
+    game.catapult?`🪨 Катапульта Lv.${game.catapult}`:'🪨 Катапульта',
+    game.towerHp<=0?'ВИМКНЕНА • відбудуй артилерію':'важкий удар по площі',
+    `🪙 ${game.catapult?310+game.catapult*220:420}`
+  );
   setBtn('oilBtn',game.oil?`🛢️ Олія Lv.${game.oil}`:'🛢️ Кипляча олія','дешева пастка воріт',`🪙 ${game.oil?155+game.oil*110:210}`);
   setBtn('trapsBtn',`🪤 Пастки Lv.${game.traps}`,'шипи → міни → вогонь',game.traps>=4?'MAX':`🪙 ${150+game.traps*130}`,game.traps>=4);
   setBtn('knightsBtn',game.knightLevel?`⚔️ Лицарі Lv.${game.knightLevel}`:'⚔️ Лицарі',game.knightCooldown>0?`готові через ${Math.ceil(game.knightCooldown)}с`:'випустити загін',`🪙 ${90+game.knightLevel*45}`);
@@ -1660,8 +1731,8 @@ function updateShop(){
     :Math.max(90,Math.round((game.towerMax-game.towerHp)*1.15));
   setBtn(
     'towerRepairBtn',
-    towersDestroyed?'🏗️ Відбудувати башти':'🧱 Ремонт башт',
-    towersDestroyed?'повернути всіх захисників':'відновити 55%',
+    towersDestroyed?'🏗️ Відбудувати артилерію':'🧱 Ремонт артилерії',
+    towersDestroyed?'повернути баллісту й катапульту':'відновити 55%',
     `🪙 ${towerRepairCost}`
   );
   setBtn(
@@ -2269,8 +2340,8 @@ function drawCastle(){
   }
 
   // defense characters
-  if(game.towerHp>0)drawArchers(x,gy);
-  if(game.mage&&game.towerHp>0)drawMage(x,gy);
+  drawArchers(x,gy);
+  if(game.mage)drawMage(x,gy);
   if(game.lava)drawLavaTrap(x,gy);
   drawDefenderWeapons();
 
@@ -2409,7 +2480,7 @@ function drawArcherUnit(x,feetY,flip=false,level=1,phase=0){
   ctx.restore();
 }
 function drawArchers(x,gy){
-  for(let i=0;i<(game.towerHp>0?game.archers:0);i++){
+  for(let i=0;i<game.archers;i++){
     const slot=archerSlot(i);
     drawArcherUnit(slot.x,slot.feetY,slot.flip,game.archerLevel,i*1.4);
 
@@ -2627,7 +2698,34 @@ function drawLavaTrap(x,gy){
 
 function drawDefenderWeapons(){
   const x=castleX(),gy=groundY();
-  if(game.towerHp<=0)return;
+
+  if(game.towerHp<=0){
+    // Only the artillery emplacements are ruined.
+    // Archers and mage remain on the intact castle.
+    if(game.ballista){
+      const bx=x+91,by=gy-303;
+      ctx.fillStyle='#41352c';
+      ctx.fillRect(bx-29,by+14,59,8);
+      ctx.strokeStyle='#5f4a39';ctx.lineWidth=5;
+      ctx.beginPath();ctx.moveTo(bx-18,by+8);ctx.lineTo(bx+20,by-9);ctx.stroke();
+      ctx.fillStyle='#676767';
+      ctx.beginPath();ctx.arc(bx+8,by+15,7,0,TAU);ctx.fill();
+    }
+
+    if(game.catapult){
+      const cx=x-199,cy=gy-203;
+      ctx.fillStyle='#403025';
+      ctx.fillRect(cx-37,cy+15,72,9);
+      ctx.strokeStyle='#624730';ctx.lineWidth=6;
+      ctx.beginPath();
+      ctx.moveTo(cx-22,cy+13);ctx.lineTo(cx+15,cy-13);
+      ctx.moveTo(cx+25,cy+12);ctx.lineTo(cx-8,cy-7);
+      ctx.stroke();
+      ctx.fillStyle='#555';
+      ctx.beginPath();ctx.arc(cx-24,cy+25,8,0,TAU);ctx.fill();
+    }
+    return;
+  }
 
   if(game.ballista){
     const bx=x+91,by=gy-303;
@@ -4068,6 +4166,7 @@ function loop(ts){
 }
 
 newGame();
+setShopTab('army');
 chooseWaveEvent();
 showWave('🍃 ВЕСНА • ХВИЛЯ 1');
 requestAnimationFrame(loop);
