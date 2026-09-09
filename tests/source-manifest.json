@@ -1,0 +1,88 @@
+{
+  "sourceFile": "castle_defense_reforged_v8_2_clean_hud (1).html",
+  "originalHtmlSha256": "c0b26f75bb6c44ac94f1704dd234934ccde86dbae854bb5a96232817ab4d9013",
+  "inlineCssSha256": "d4f7be9a06514eea1f01e0892dfe4ed6f7d1268a842d9002c86b06d601cc867c",
+  "baselineInlineScriptSha256": "139a48fd86d2ff92bead9ba6ce6c9838da82a2233f03fb736824a36e9909a081",
+  "currentScriptSha256": "48c5b809bf4b11231c0f4a5d8632933e6165f57ebd3992a3eacb24a5dcbb914a",
+  "approvedChanges": [
+    {
+      "file": "scripts/simulation.js",
+      "summary": "Keep non-flying enemies anchored to the current ground line after viewport resize."
+    },
+    {
+      "file": "scripts/balance.js",
+      "summary": "Centralize the catapult nerf and Archer Commander balance values."
+    },
+    {
+      "file": "scripts/economy-ui.js",
+      "summary": "Preserve fortress HP on gate upgrades and add the one-time Archer Commander purchase."
+    },
+    {
+      "file": "scripts/render-units.js",
+      "summary": "Cap catapult projectile rendering and draw the Archer Commander on the wall."
+    },
+    {
+      "file": "scripts/core.js",
+      "summary": "Space three archers around the Commander when he joins the central wall formation."
+    },
+    {
+      "file": "scripts/render-world.js",
+      "summary": "Render the Commander after artillery so the ballista cannot obscure him. Redesign Lv.7 as one supported royal keep with battlements, arched windows and heraldry, replacing the two stacked upper towers without changing Lv.1–6 or gameplay."
+    },
+    {
+      "file": "scripts/visuals.js",
+      "summary": "User-requested visual polish: isolated animation state, bounded effects, seasonal blending, grounded shadows, weapon cycles, impact reactions, castle damage and heraldry. Combat state and balance unchanged."
+    },
+    {
+      "file": "scripts/render-night.js",
+      "summary": "Replace the full-screen night filter with a separate sky, moon, stars, material palettes and stable goblin torch carriers casting bounded local light. Existing night combat modifiers remain unchanged."
+    }
+  ],
+  "cssFile": "styles/main.css",
+  "scripts": [
+    {
+      "file": "scripts/core.js",
+      "sha256": "d21c0ab8fd9a5dc0fc21750447790d1119c7a55f411a04d1629e25ec6b00a2ea"
+    },
+    {
+      "file": "scripts/balance.js",
+      "sha256": "cdd94c8b4e10a16da467f39d4a358ddb2892f957a6d6ac463b3c3e2e9f464029"
+    },
+    {
+      "file": "scripts/visuals.js",
+      "sha256": "e04cfa2e1df422973185a8ac817ed3bd769256e51c5e89bfeecf3f51c2d700b4"
+    },
+    {
+      "file": "scripts/render-night.js",
+      "sha256": "9be0ed269db9c84ce44f873ef846ddfd88df9fb38b35f8e820b9fd4fad3fecae"
+    },
+    {
+      "file": "scripts/game-state.js",
+      "sha256": "68b56e82c8a277538b6f8cfd4e30b6b96f142cec615bc69c837709e9d2cf3c62"
+    },
+    {
+      "file": "scripts/simulation.js",
+      "sha256": "3e9188cd53d2b3bd6c78b8c2beb6e0259f5c59626d058cbd3c9bf2fca42fcc5b"
+    },
+    {
+      "file": "scripts/economy-ui.js",
+      "sha256": "bd701575ec5ab53b0c4e96024abecd9dde8e29d529aeed0773ca0543d189e778"
+    },
+    {
+      "file": "scripts/render-world.js",
+      "sha256": "279061044c827c91e27e64371610a55fa046ed08443b629812eafa0caa0e3fc2"
+    },
+    {
+      "file": "scripts/render-units.js",
+      "sha256": "a055782e84141cfb24cbd2e4f24ff5eb5e8d989c016f957d4f0e82e8d11eb6e9"
+    },
+    {
+      "file": "scripts/render-effects.js",
+      "sha256": "c205207b8cacb893e6d562845e48fb3a5d70e66d173a231ad376f953ac1e5495"
+    },
+    {
+      "file": "scripts/main.js",
+      "sha256": "5674388845ff30278eff2d34b80ac4004ec5e4eb150f59bebe078fecb329c771"
+    }
+  ]
+}

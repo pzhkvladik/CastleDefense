@@ -1,0 +1,10 @@
+{
+  "name": "castle-defense-reforged",
+  "version": "8.2.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node tools/serve.mjs",
+    "test": "node tests/integrity.mjs && node tests/mechanics.mjs && node tests/visuals.mjs && node tests/night.mjs && node tests/castle.mjs"
+  }
+}
