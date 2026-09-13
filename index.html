@@ -14,9 +14,9 @@
     <div id="hud">
       <div class="hudSide">
         <div class="pill">🏰 Ворота: <span id="hp">300/300</span></div>
-        <div class="pill">🌊 Хвиля: <span id="wave">1</span></div>
-        <div class="pill">🍃 <span id="seasonLabel">Весна</span></div>
         <div class="pill" title="HP артилерійських платформ. При 0 HP вимикаються тільки балліста та катапульта.">🧱 Артилерія: <span id="towerHp">180/180</span></div>
+        <div class="pill">🌊 Хвиля: <span id="wave">1</span></div>
+        <div class="pill"><span id="chapterLabel">🌿 Chapter I — Greenlands</span></div>
         <div id="perkBar" class="perkBar"></div>
         <div class="pill">⚔️ <span id="eventLabel">Звичайна хвиля</span></div>
       </div>
@@ -43,7 +43,7 @@
     <div id="rewardOverlay" class="rewardOverlay">
       <div class="rewardCard">
         <div class="rewardTitle">Скриня боса</div>
-        <div class="rewardSub">Обери один постійний бонус</div>
+        <div class="rewardSub">Перемога над босом — обери одну унікальну силу</div>
         <div id="rewardChoices" class="rewardChoices"></div>
       </div>
     </div>
@@ -62,6 +62,7 @@
       <button class="shopTab active" data-tab="army" onclick="setShopTab('army')">⚔️ Війська</button>
       <button class="shopTab" data-tab="defense" onclick="setShopTab('defense')">🛡️ Оборона</button>
       <button class="shopTab" data-tab="castle" onclick="setShopTab('castle')">🏰 Фортеця</button>
+      <button id="repairTab" class="shopTab" data-tab="repair" onclick="setShopTab('repair')">🔧 Ремонт</button>
     </div>
 
     <div id="shop">
@@ -71,6 +72,7 @@
         <button id="archerCommanderBtn" onclick="buyArcherCommander()"></button>
         <button id="mageBtn" onclick="buyMage()"></button>
         <button id="knightsBtn" onclick="deployKnights()"></button>
+        <button id="cavalryBtn" onclick="deployCavalry()"></button>
         <button id="techBtn" onclick="buyTech()"></button>
       </div>
 
@@ -80,14 +82,17 @@
         <button id="oilBtn" onclick="buyOil()"></button>
         <button id="trapsBtn" onclick="buyTraps()"></button>
         <button id="gateBtn" onclick="buyGate()"></button>
-        <button id="repairBtn" onclick="repairGate()"></button>
       </div>
 
       <div class="shopGroup" data-shop-group="castle">
         <button id="ballistaBtn" onclick="buyBallista()"></button>
         <button id="catapultBtn" onclick="buyCatapult()"></button>
-        <button id="towerRepairBtn" onclick="repairTowers()"></button>
         <button id="castleBtn" onclick="upgradeCastle()"></button>
+      </div>
+
+      <div class="shopGroup" data-shop-group="repair">
+        <button id="repairBtn" onclick="repairGate()"></button>
+        <button id="towerRepairBtn" onclick="repairTowers()"></button>
       </div>
     </div>
   </div>
@@ -97,6 +102,9 @@
 <script src="scripts/balance.js"></script>
 <script src="scripts/visuals.js"></script>
 <script src="scripts/render-night.js"></script>
+<script src="scripts/render-weather.js"></script>
+<script src="scripts/render-construction.js"></script>
+<script src="scripts/render-chapters.js"></script>
 <script src="scripts/game-state.js"></script>
 <script src="scripts/simulation.js"></script>
 <script src="scripts/economy-ui.js"></script>

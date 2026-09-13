@@ -1,10 +1,10 @@
 {
   "name": "castle-defense-reforged",
-  "version": "8.2.0",
+  "version": "8.3.0",
   "private": true,
   "type": "module",
   "scripts": {
     "start": "node tools/serve.mjs",
-    "test": "node tests/integrity.mjs && node tests/mechanics.mjs && node tests/visuals.mjs && node tests/night.mjs && node tests/castle.mjs"
+    "test": "node tests/integrity.mjs && node tests/mechanics.mjs && node tests/visuals.mjs && node tests/night.mjs && node tests/castle.mjs && node tests/cavalry.mjs && node tests/storm.mjs && node tests/repairs-construction.mjs && node tests/chapters.mjs"
   }
 }
