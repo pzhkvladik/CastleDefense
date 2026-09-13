@@ -1,6 +1,6 @@
 function endGame(){
   game.gameOver=true;
-  document.getElementById('resultText').textContent=`Ти дійшов до хвилі ${game.wave}, знищив ${game.kills} ворогів і пережив ${Math.floor((game.wave-1)/4)} сезонів.`;
+  document.getElementById('resultText').textContent=`Ти дійшов до хвилі ${game.wave}, знищив ${game.kills} ворогів і пройшов ${Math.max(1,Math.floor((game.wave-1)/10)+1)} розділ(и).`;
   document.getElementById('overlay').classList.add('show');
 }
 
@@ -65,6 +65,30 @@ function deployKnights(){
 
   game.knightCooldown=Math.max(11,21-game.knightLevel*2);
   showMsg('⚔️ Лицарі вийшли з воріт');
+  updateShop();
+}
+function deployCavalry(){
+  if(game.cavalryCooldown>0){
+    showMsg(`🐎 Вершники повернуться через ${Math.ceil(game.cavalryCooldown)}с`);
+    return;
+  }
+  const targets=enemies.filter(e=>!e.dead&&e.type==='catapult').sort((a,b)=>a.x-b.x);
+  if(!targets.length){
+    showMsg('🐎 На полі немає ворожої катапульти');
+    return;
+  }
+  if(!spend(BALANCE.cavalry.cost))return;
+
+  for(let i=0;i<BALANCE.cavalry.count;i++){
+    cavalry.push({
+      type:'cavalry',x:gateX()+18-i*24,y:groundY()-6,
+      target:targets[i%targets.length],mode:'charge',slot:i,
+      phase:i*Math.PI,attackTimer:.34+i*.16,attackAnim:0,
+      facing:1,dead:false
+    });
+  }
+  game.cavalryCooldown=BALANCE.cavalry.cooldown;
+  showMsg('🐎 Кінна вилазка! Вершники обходять стрій');
   updateShop();
 }
 function repairTowers(){
@@ -132,7 +156,13 @@ function buyTech(){
 function fireBallista(){
   if(!game.ballista||game.towerHp<=0)return;
   game.ballistaKick=.38;
-  const targets=enemies.filter(e=>!e.dead).sort((a,b)=>a.x-b.x);
+  const targets=enemies.filter(e=>!e.dead).sort((a,b)=>{
+    if(game.siegeHunter){
+      const ap=['catapult','ram'].includes(a.type)?0:1,bp=['catapult','ram'].includes(b.type)?0:1;
+      if(ap!==bp)return ap-bp;
+    }
+    return a.x-b.x;
+  });
   if(!targets.length)return;
 
   visualShot('ballista');
@@ -142,7 +172,7 @@ function fireBallista(){
   arrows.push({
     x:sx,y:sy,vx:dx/len*610,vy:dy/len*610,rot:Math.atan2(dy,dx),
     life:2,target,targetType:'enemy',
-    damage:72+game.ballista*38,level:5,crit:false,ballista:true,trail:[]
+    damage:72+game.ballista*38,level:5,crit:false,ballista:true,source:'ballista',trail:[]
   });
 }
 function fireDefenderCatapult(){
@@ -234,8 +264,9 @@ function buyRiver(){
     game.bridge.active=false;
     game.bridge.building=false;
     game.bridge.buildProgress=0;
+    startMoatConstruction();
   }
-  showMsg(game.riverLevel===1?'🐊 Рів з алігаторами готовий':`🐊 Рів Lv.${game.riverLevel}`);
+  showMsg(first?'⛏️ Кріпаки будують рів з алігаторами!':`🐊 Рів Lv.${game.riverLevel}`);
   updateShop()
 }
 function buyLava(){
@@ -259,7 +290,14 @@ function repairGate(){
 }
 function setBtn(id,name,desc,price,disabled=false){
   const b=document.getElementById(id);
-  b.disabled=disabled;
+  const priceText=String(price??'');
+  const priceMatch=priceText.match(/🪙\s*(\d+)/);
+  const unaffordable=priceMatch?game.gold<Number(priceMatch[1]):false;
+  const finalDisabled=disabled||unaffordable;
+  b.disabled=finalDisabled;
+  b.classList.toggle('unaffordable',unaffordable&&!disabled);
+  b.classList.toggle('locked',!!disabled);
+  b.setAttribute('aria-disabled',finalDisabled?'true':'false');
   b.innerHTML=`<span class="name">${name}</span><span class="desc">${desc}</span><span class="price">${price}</span>`;
 }
 function updateShop(){
@@ -287,7 +325,7 @@ function updateShop(){
     'грозова хмара • працює незалежно від артилерії',
     `🪙 ${mageCost()}`
   );
-  setBtn('repairBtn','🔨 Ремонт','55% • дуже дорогий',`🪙 ${repairCost()}`);
+  setBtn('repairBtn','🏰 Ремонт замку','відновити 55% міцності',`🪙 ${repairCost()}`);
   setBtn(
     'ballistaBtn',
     game.ballista?`🎯 Балліста Lv.${game.ballista}`:'🎯 Балліста',
@@ -303,6 +341,13 @@ function updateShop(){
   setBtn('oilBtn',game.oil?`🛢️ Олія Lv.${game.oil}`:'🛢️ Кипляча олія','дешева пастка воріт',`🪙 ${game.oil?155+game.oil*110:210}`);
   setBtn('trapsBtn',`🪤 Пастки Lv.${game.traps}`,'шипи → міни → вогонь',game.traps>=4?'MAX':`🪙 ${150+game.traps*130}`,game.traps>=4);
   setBtn('knightsBtn',game.knightLevel?`⚔️ Лицарі Lv.${game.knightLevel}`:'⚔️ Лицарі',game.knightCooldown>0?`готові через ${Math.ceil(game.knightCooldown)}с`:'випустити загін',`🪙 ${90+game.knightLevel*45}`);
+  const catapultsAlive=enemies.some(e=>!e.dead&&e.type==='catapult');
+  setBtn(
+    'cavalryBtn','🐎 Кінна вилазка',
+    game.cavalryCooldown>0?`повернуться через ${Math.ceil(game.cavalryCooldown)}с`:catapultsAlive?'обхід строю • удар з тилу':'потрібна ворожа катапульта',
+    `🪙 ${BALANCE.cavalry.cost}`,
+    game.cavalryCooldown>0||!catapultsAlive
+  );
   const towersDestroyed=game.towerHp<=0;
   const towerRepairCost=towersDestroyed
     ?300+game.castleLevel*95
@@ -326,21 +371,24 @@ function updateShop(){
 function syncHUD(){
   document.getElementById('hp').textContent=`${Math.ceil(game.gateHp)}/${game.gateMax}`;
   document.getElementById('wave').textContent=game.wave;
-  const season=currentSeason();
-  document.getElementById('seasonLabel').textContent=`${season.icon} ${season.name}`;
+  const chapter=currentSeason();
+  const chapterLabel=document.getElementById('chapterLabel');
+  if(chapterLabel)chapterLabel.textContent=`${chapter.icon} ${chapter.chapter}`;
   document.getElementById('towerHp').textContent=`${Math.max(0,Math.ceil(game.towerHp))}/${game.towerMax}`;
   document.getElementById('eventLabel').textContent=eventName();
   document.getElementById('gold').textContent=Math.floor(game.gold);
   document.getElementById('kills').textContent=game.kills;
+  const repairCritical=game.gateHp/game.gateMax<.15||game.towerHp/game.towerMax<.15;
+  const repairTab=document.getElementById('repairTab');
+  repairTab.classList.toggle('repairCritical',repairCritical);
+  repairTab.title=repairCritical?'Критичні пошкодження — потрібен ремонт!':'Ремонт замку та артилерії';
   updatePerkHUD();
   const bw=document.getElementById('bossWrap'),bf=document.getElementById('bossFill');
   if(game.boss&&!game.boss.dead){
     bw.style.display='block';
     bf.style.width=(100*game.boss.hp/game.boss.maxHp)+'%';
-    const bs=SEASONS[game.boss.seasonIndex ?? seasonIndexForWave(game.wave)];
-    document.getElementById('bossTitle').textContent=game.boss.type==='dragon'
-      ?'🐉 ANCIENT FROST DRAGON'
-      :`👑 ${bs.bossName.toUpperCase()}`;
+    const bs=CHAPTER_THEMES[game.boss.seasonIndex ?? seasonIndexForWave(game.wave)];
+    document.getElementById('bossTitle').textContent=`👑 ${bs.bossName.toUpperCase()}`;
   }else bw.style.display='none'
 }
 

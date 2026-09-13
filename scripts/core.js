@@ -33,7 +33,7 @@ function rr(x,y,w,h,r){
 }
 
 let game;
-const enemies=[],arrows=[],enemyArrows=[],stones=[],particles=[],texts=[],clouds=[],lightnings=[],alligators=[],birds=[],knights=[];
+const enemies=[],arrows=[],enemyArrows=[],stones=[],particles=[],texts=[],clouds=[],lightnings=[],alligators=[],birds=[],knights=[],cavalry=[];
 let archerTimers=[0,0,0];
 
 function groundY(){return H*.80}
@@ -51,53 +51,66 @@ function bridgePoint(){
   return {x:b.center,y:groundY()-5};
 }
 
-const SEASONS=[
+// Chapter themes replace the old four-season cycle.
+// The legacy SEASONS name is kept as an alias so existing rendering/combat
+// helpers can use the same palette interface without running a second theme system.
+const CHAPTER_THEMES=[
   {
-    id:'spring',name:'Весна',icon:'🍃',
-    goblinSkin:'#789f49',goblinDark:'#638238',cloth:'#4b3a2e',
-    hill:'#668377',hill2:'#405b48',ground1:'#667949',ground2:'#34412e',
-    skyTop:'#355f82',skyMid:'#628da8',skyLow:'#9eb7aa',skyBottom:'#c9bc88',
-    treeA:'#35553d',treeB:'#2e4a38',
-    bossName:'Mossback King',bossColor:'#6f923f',bossAccent:'#6f5131',
+    id:'greenlands',name:'Greenlands',icon:'🌿',chapter:'Chapter I — Greenlands',
+    goblinSkin:'#789f49',goblinDark:'#587638',cloth:'#594630',
+    hill:'#78958a',hill2:'#55705c',ground1:'#6f864f',ground2:'#3d4f35',
+    skyTop:'#7ea3ad',skyMid:'#9bb3af',skyLow:'#bdc7aa',skyBottom:'#c9b886',
+    treeA:'#355b3c',treeB:'#294a34',
+    bossName:'Mossback Titan',bossColor:'#668c45',bossAccent:'#76532d',
     hpMul:1.00,speedMul:1.00,damageMul:1.00
   },
   {
-    id:'summer',name:'Літо',icon:'☀️',
-    goblinSkin:'#789341',goblinDark:'#5f7432',cloth:'#633e27',
-    hill:'#76866b',hill2:'#4d6240',ground1:'#7b8144',ground2:'#44472d',
-    skyTop:'#376f9d',skyMid:'#6fa7bf',skyLow:'#b9cab0',skyBottom:'#d6bd72',
-    treeA:'#365936',treeB:'#29452f',
-    bossName:'Ash Warlord',bossColor:'#71873d',bossAccent:'#9b482d',
-    hpMul:1.08,speedMul:1.06,damageMul:1.06
+    id:'winter',name:'Winter',icon:'❄️',chapter:'Chapter II — Winter',
+    goblinSkin:'#7c9c98',goblinDark:'#526f75',cloth:'#3f5365',
+    hill:'#718591',hill2:'#4e606b',ground1:'#c9d8db',ground2:'#899ba1',
+    skyTop:'#687f92',skyMid:'#92a7b3',skyLow:'#c3d0d5',skyBottom:'#dce3e2',
+    treeA:'#455862',treeB:'#334650',
+    bossName:'Frostfang Tyrant',bossColor:'#729a9b',bossAccent:'#4d718b',
+    hpMul:1.10,speedMul:.97,damageMul:1.07
   },
   {
-    id:'autumn',name:'Осінь',icon:'🍂',
-    goblinSkin:'#7f9144',goblinDark:'#656f35',cloth:'#5b382b',
-    hill:'#806f61',hill2:'#54483d',ground1:'#79633e',ground2:'#413528',
-    skyTop:'#506b7d',skyMid:'#8b8c8a',skyLow:'#b8a27f',skyBottom:'#c79055',
-    treeA:'#704b32',treeB:'#8a5a35',
-    bossName:'Rotfang Chieftain',bossColor:'#7b8540',bossAccent:'#6e3445',
-    hpMul:1.17,speedMul:1.03,damageMul:1.12
+    id:'darkForest',name:'Dark Forest',icon:'🌲',chapter:'Chapter III — Dark Forest',
+    goblinSkin:'#597552',goblinDark:'#354b3d',cloth:'#343b35',
+    hill:'#40594e',hill2:'#273a31',ground1:'#344b39',ground2:'#1f2e26',
+    skyTop:'#334b4a',skyMid:'#4f6460',skyLow:'#68766a',skyBottom:'#6f735e',
+    treeA:'#21372c',treeB:'#182b24',
+    bossName:'Shadowroot Lord',bossColor:'#506b4b',bossAccent:'#674563',
+    hpMul:1.18,speedMul:1.04,damageMul:1.13
   },
   {
-    id:'winter',name:'Зима',icon:'❄️',
-    goblinSkin:'#719089',goblinDark:'#5c7470',cloth:'#35404c',
-    hill:'#637987',hill2:'#475a67',ground1:'#c6d1cf',ground2:'#8d9c9d',
-    skyTop:'#536d88',skyMid:'#7f98aa',skyLow:'#b9c8d1',skyBottom:'#d8dedb',
-    treeA:'#41515a',treeB:'#33424a',
-    bossName:'Frostfang Tyrant',bossColor:'#6d8f8c',bossAccent:'#3f6282',
-    hpMul:1.28,speedMul:.96,damageMul:1.18
+    id:'volcanic',name:'Volcanic',icon:'🌋',chapter:'Chapter IV — Volcanic',
+    goblinSkin:'#8b6840',goblinDark:'#583f2f',cloth:'#65392f',
+    hill:'#58423e',hill2:'#342c2c',ground1:'#423331',ground2:'#251f20',
+    skyTop:'#5e4b4a',skyMid:'#866b5f',skyLow:'#aa765d',skyBottom:'#c17a48',
+    treeA:'#3a2e2b',treeB:'#2a2323',
+    bossName:'Lava Golem',bossColor:'#70513d',bossAccent:'#d86531',
+    hpMul:1.28,speedMul:.94,damageMul:1.20
+  },
+  {
+    id:'demonic',name:'Demonic',icon:'😈',chapter:'Chapter V — Demonic',
+    goblinSkin:'#7a506f',goblinDark:'#4e304f',cloth:'#4c2949',
+    hill:'#4b3048',hill2:'#2b1b2d',ground1:'#352237',ground2:'#1d141f',
+    skyTop:'#35243f',skyMid:'#58324f',skyLow:'#7d3b55',skyBottom:'#87363f',
+    treeA:'#2c1d2d',treeB:'#201421',
+    bossName:'Demon Archfiend',bossColor:'#6b3d62',bossAccent:'#d13d6e',
+    hpMul:1.40,speedMul:1.03,damageMul:1.30
   }
 ];
+const SEASONS=CHAPTER_THEMES;
 
 function seasonIndexForWave(w){
-  return Math.floor((w-1)/4)%4;
+  return clamp(Math.floor((Math.max(1,w)-1)/10),0,CHAPTER_THEMES.length-1);
 }
 function currentSeason(){
-  return SEASONS[seasonIndexForWave(game.wave)];
+  return CHAPTER_THEMES[seasonIndexForWave(game.wave)];
 }
-function seasonCycleNumber(w){
-  return Math.floor((w-1)/16);
+function seasonCycleNumber(){
+  return 0;
 }
 
 function archerSlot(i){

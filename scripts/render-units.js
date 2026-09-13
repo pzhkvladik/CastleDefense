@@ -554,6 +554,121 @@ function drawRoadTraps(){
   }
 }
 
+function drawMountedRaider(rider){
+  const moving=rider.mode==='attack'?.28:1;
+  const stride=rider.phase;
+  const attack=rider.attackAnim>0?Math.sin((1-rider.attackAnim)*Math.PI):0;
+  const gallop=Math.abs(Math.sin(stride))*3.1*moving;
+  const gy=groundY()-6;
+
+  function horseLeg(baseX,phase,near){
+    const swing=Math.sin(stride+phase)*11*moving;
+    const lift=Math.max(0,Math.cos(stride+phase))*8*moving;
+    const kneeX=baseX+swing*.42;
+    const hoofX=baseX+swing;
+    ctx.strokeStyle=nightColor(near?'#6b4126':'#4c2d1d',near?'#3e2c2a':'#282125');
+    ctx.lineWidth=near?6:5;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(baseX,-27);ctx.lineTo(kneeX,-14+Math.abs(swing)*.12);ctx.lineTo(hoofX,-1-lift);ctx.stroke();
+    ctx.strokeStyle=nightColor('#241914','#121317');ctx.lineWidth=5;
+    ctx.beginPath();ctx.moveTo(hoofX-3,-1-lift);ctx.lineTo(hoofX+8,-1-lift);ctx.stroke();
+  }
+
+  ctx.save();
+  ctx.translate(rider.x,gy);
+  ctx.scale(rider.facing||1,1);
+
+  ctx.fillStyle='rgba(0,0,0,.31)';
+  ctx.beginPath();ctx.ellipse(-2,6,39,7,0,0,TAU);ctx.fill();
+
+  const tailSwing=Math.sin(stride*.7)*6*moving;
+  ctx.strokeStyle=nightColor('#342018','#16161a');ctx.lineWidth=7;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(-33,-34);ctx.quadraticCurveTo(-49,-36+tailSwing,-52,-19+tailSwing*.35);ctx.stroke();
+  ctx.strokeStyle=nightColor('#201613','#0d0e12');ctx.lineWidth=3;
+  ctx.beginPath();ctx.moveTo(-47,-23+tailSwing*.35);ctx.lineTo(-55,-14+tailSwing*.22);ctx.stroke();
+
+  horseLeg(-18,Math.PI*.92,false);
+  horseLeg(20,-.12,false);
+
+  ctx.save();
+  ctx.translate(0,-gallop);
+
+  const coat=ctx.createLinearGradient(-38,-52,36,-10);
+  coat.addColorStop(0,nightColor('#4b2b1c','#242026'));
+  coat.addColorStop(.45,nightColor('#8d5934','#584041'));
+  coat.addColorStop(.78,nightColor('#6f4228','#423137'));
+  coat.addColorStop(1,nightColor('#36221a','#221b22'));
+  ctx.fillStyle=coat;
+  ctx.beginPath();ctx.ellipse(-1,-33,38,18,-.05,0,TAU);ctx.fill();
+  ctx.beginPath();ctx.ellipse(-25,-35,16,18,.18,0,TAU);ctx.fill();
+  ctx.beginPath();ctx.ellipse(23,-32,18,14,-.04,0,TAU);ctx.fill();
+
+  // neck and head
+  ctx.beginPath();ctx.moveTo(16,-45);ctx.quadraticCurveTo(27,-63,37,-70);ctx.lineTo(49,-61);ctx.lineTo(29,-28);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.ellipse(45,-66,15,10,.12,0,TAU);ctx.fill();
+  ctx.beginPath();ctx.moveTo(35,-72);ctx.lineTo(37,-84);ctx.lineTo(43,-72);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(46,-72);ctx.lineTo(52,-82);ctx.lineTo(53,-68);ctx.closePath();ctx.fill();
+  ctx.fillStyle=nightColor('#1e1510','#0f1014');
+  ctx.beginPath();ctx.moveTo(21,-45);ctx.quadraticCurveTo(24,-68,35,-78);ctx.lineTo(40,-71);ctx.quadraticCurveTo(30,-57,29,-39);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#151516';ctx.beginPath();ctx.arc(49,-67,2.2,0,TAU);ctx.fill();
+  ctx.strokeStyle=nightColor('#caa15d','#85715c');ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(33,-68);ctx.quadraticCurveTo(43,-56,56,-62);ctx.stroke();
+
+  // mane
+  ctx.fillStyle=nightColor('#231612','#121219');
+  ctx.beginPath();ctx.moveTo(20,-45);ctx.quadraticCurveTo(14,-56,18,-67);ctx.quadraticCurveTo(24,-79,34,-83);ctx.lineTo(39,-76);ctx.quadraticCurveTo(28,-65,27,-41);ctx.closePath();ctx.fill();
+
+  // bridle and chest barding
+  ctx.strokeStyle=nightColor('#5b3b22','#3e2f2f');ctx.lineWidth=3;
+  ctx.beginPath();ctx.moveTo(44,-58);ctx.lineTo(55,-52);ctx.moveTo(38,-67);ctx.lineTo(25,-48);ctx.stroke();
+  ctx.fillStyle=nightColor('#7b2733','#4b2a39');
+  ctx.beginPath();ctx.moveTo(-20,-48);ctx.lineTo(18,-48);ctx.lineTo(24,-24);ctx.lineTo(-24,-24);ctx.closePath();ctx.fill();
+  ctx.fillStyle=nightColor('#d0ad58','#aa975f');ctx.fillRect(-22,-29,45,3);
+  ctx.fillStyle='rgba(255,255,255,.12)';ctx.fillRect(-17,-45,23,2);
+
+  // stirrup strap
+  ctx.strokeStyle='#3a2418';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(-10,-48);ctx.lineTo(4,-16);ctx.stroke();
+
+  // rider silhouette
+  const capeLift=moving*(5+Math.sin(stride*.6)*3);
+  ctx.fillStyle=nightColor('#8c2737','#4b2636');
+  ctx.beginPath();ctx.moveTo(-4,-87);ctx.lineTo(-32,-67-capeLift);ctx.lineTo(-23,-47);ctx.lineTo(8,-68);ctx.closePath();ctx.fill();
+
+  const steel=ctx.createLinearGradient(-12,-92,16,-66);
+  steel.addColorStop(0,nightColor('#596267','#354350'));
+  steel.addColorStop(.48,nightColor('#c0c8c7','#718696'));
+  steel.addColorStop(1,nightColor('#566065','#34434f'));
+  ctx.fillStyle=steel;
+  ctx.beginPath();ctx.moveTo(-10,-88);ctx.lineTo(10,-88);ctx.lineTo(15,-62);ctx.lineTo(-12,-62);ctx.closePath();ctx.fill();
+  ctx.fillStyle=nightColor('#922d3b','#552a3a');ctx.fillRect(-10,-75,24,5);
+  ctx.fillStyle=nightColor('#d7b95e','#b29a5e');ctx.fillRect(-2,-76,5,7);
+
+  ctx.fillStyle=steel;ctx.beginPath();ctx.arc(1,-98,12,Math.PI,TAU);ctx.lineTo(12,-89);ctx.lineTo(-10,-89);ctx.closePath();ctx.fill();
+  ctx.fillStyle=nightColor('#30383c','#172631');ctx.fillRect(-10,-97,23,5);
+  ctx.fillStyle=nightColor('#e7c66c','#d9a95e');ctx.fillRect(5,-96,5,2);
+  ctx.fillStyle=nightColor('#9a2d3c','#582838');ctx.beginPath();ctx.moveTo(-2,-109);ctx.quadraticCurveTo(8,-122,17,-108);ctx.lineTo(5,-101);ctx.closePath();ctx.fill();
+
+  ctx.strokeStyle=nightColor('#4b5256','#26313b');ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(-2,-57);ctx.lineTo(9,-42);ctx.lineTo(16,-29);ctx.stroke();
+  ctx.strokeStyle='#221a18';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(13,-29);ctx.lineTo(22,-27);ctx.stroke();
+
+  // sword arm
+  ctx.save();ctx.translate(11,-82);ctx.rotate(-1.04+attack*1.95);
+  ctx.strokeStyle=nightColor('#aa7856','#6c5350');ctx.lineWidth=6;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(14,4);ctx.stroke();
+  ctx.strokeStyle=nightColor('#d2aa52','#a28c58');ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(11,-2);ctx.lineTo(16,9);ctx.stroke();
+  const blade=ctx.createLinearGradient(14,2,52,-12);
+  blade.addColorStop(0,nightColor('#7d898d','#5e7180'));
+  blade.addColorStop(.55,nightColor('#eef4f1','#b7ccd7'));
+  blade.addColorStop(1,nightColor('#899497','#667d8b'));
+  ctx.strokeStyle=blade;ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(15,3);ctx.lineTo(51,-10);ctx.stroke();
+  ctx.fillStyle=nightColor('#edf2ef','#b6cbd4');ctx.beginPath();ctx.moveTo(53,-11);ctx.lineTo(46,-5);ctx.lineTo(48,-14);ctx.closePath();ctx.fill();
+  ctx.restore();
+
+  ctx.restore();
+
+  horseLeg(-17,.03,true);
+  horseLeg(22,Math.PI*1.08,true);
+  ctx.restore();
+}
+
 function drawKnight(k){
   const attack=k.attackAnim>0?Math.sin((1-k.attackAnim)*Math.PI):0;
   const hurt=k.hurt>0;
@@ -742,6 +857,12 @@ function drawRiver(){
   const gy=groundY();
   const b=riverBounds();
   const rx=b.left,rw=b.width;
+  const waterLevel=moatConstructionWaterLevel();
+  const waterTop=lerp(H,gy-14,waterLevel);
+
+  // The dry cut is visible while the peasants dig; water then rises from below.
+  ctx.fillStyle=nightColor('#403629','#1b2932');
+  ctx.fillRect(rx,gy-14,rw,H-gy+14);
 
   // deeper water gradient makes moat less flat
   const water=ctx.createLinearGradient(rx,0,rx+rw,0);
@@ -751,11 +872,12 @@ function drawRiver(){
   water.addColorStop(.86,nightColor('#347d91','#244a60'));
   water.addColorStop(1,nightColor('#285e70','#132d43'));
   ctx.fillStyle=water;
-  ctx.fillRect(rx,gy-14,rw,H-gy+14);
+  if(waterLevel>0)ctx.fillRect(rx,waterTop,rw,H-waterTop);
 
   ctx.fillStyle='rgba(175,226,224,.20)';
-  for(let i=0;i<11;i++){
-    const yy=gy+i*13+Math.sin(time*2+i)*2.5;
+  for(let i=0;i<11&&waterLevel>0;i++){
+    const yy=waterTop+i*13+Math.sin(time*2+i)*2.5;
+    if(yy>H)continue;
     ctx.fillRect(rx+8+((i*33)%Math.max(20,rw-60)),yy,42,2);
   }
 
@@ -768,7 +890,7 @@ function drawRiver(){
 
   // alligators stay beneath the bridge
   ctx.save();ctx.beginPath();ctx.rect(rx,gy-24,rw,H-gy+24);ctx.clip();
-  for(const a of alligators)drawAlligator(a);
+  if(moatConstructionShowsAlligators())for(const a of alligators)drawAlligator(a);
   ctx.restore();
 
   drawBridge();
@@ -1290,9 +1412,105 @@ function drawDragonBoss(e){
   }
 }
 
+
+function drawChapterBoss(e){
+  const chapter=CHAPTER_THEMES[e.seasonIndex ?? seasonIndexForWave(game.wave)];
+  const s=e.scale;
+  const hurt=e.hurt>0;
+  const attack=e.attackAnim>0?Math.sin((1-e.attackAnim)*Math.PI):0;
+  const bob=Math.sin(visual.clock*2.2+e.phase)*1.4;
+
+  ctx.save();
+  ctx.translate(e.x,groundY()-8-bob);
+  ctx.scale(s,s);
+  if(e.dead){ctx.rotate(-.72);ctx.globalAlpha=clamp(e.death/.35,0,1)}
+  if(hurt&&!e.dead)ctx.globalAlpha=.86;
+
+  // grounded shadow
+  ctx.fillStyle='rgba(0,0,0,.22)';
+  ctx.beginPath();ctx.ellipse(0,12,34,8,0,0,TAU);ctx.fill();
+
+  if(chapter.id==='greenlands'){
+    // Mossback Titan: massive forest troll with bark armor and uprooted-tree club.
+    ctx.fillStyle='#39472f';ctx.beginPath();ctx.ellipse(0,-27,27,38,0,0,TAU);ctx.fill();
+    ctx.fillStyle='#536a3b';ctx.beginPath();ctx.arc(0,-68,22,0,TAU);ctx.fill();
+    ctx.fillStyle='#2f3d29';ctx.beginPath();ctx.moveTo(-17,-76);ctx.lineTo(-34,-87);ctx.lineTo(-20,-68);ctx.fill();ctx.beginPath();ctx.moveTo(17,-76);ctx.lineTo(35,-87);ctx.lineTo(20,-68);ctx.fill();
+    // bark shoulder plates
+    ctx.fillStyle='#654b31';ctx.fillRect(-31,-47,15,30);ctx.fillRect(16,-47,15,30);
+    ctx.strokeStyle='#8b6b43';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-28,-43);ctx.lineTo(-19,-22);ctx.moveTo(28,-43);ctx.lineTo(19,-22);ctx.stroke();
+    // moss patches
+    ctx.fillStyle='#6d8e44';ctx.beginPath();ctx.arc(-18,-42,9,0,TAU);ctx.arc(14,-52,8,0,TAU);ctx.arc(5,-20,7,0,TAU);ctx.fill();
+    // face
+    ctx.fillStyle='#f3cc55';ctx.fillRect(-10,-72,6,4);ctx.fillRect(4,-72,6,4);
+    ctx.fillStyle='#29301f';ctx.fillRect(-8,-72,2,4);ctx.fillRect(6,-72,2,4);
+    // tree club
+    ctx.save();ctx.translate(24,-18);ctx.rotate(-.62-attack*.55);ctx.strokeStyle='#5f432a';ctx.lineWidth=9;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(32,-38);ctx.stroke();ctx.fillStyle='#705137';ctx.beginPath();ctx.arc(35,-42,12,0,TAU);ctx.fill();ctx.fillStyle='#4c6c37';ctx.beginPath();ctx.arc(39,-50,8,0,TAU);ctx.arc(29,-47,7,0,TAU);ctx.fill();ctx.restore();
+    // branch antlers
+    ctx.strokeStyle='#665039';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(-12,-84);ctx.lineTo(-22,-101);ctx.lineTo(-32,-105);ctx.moveTo(-22,-98);ctx.lineTo(-18,-109);ctx.moveTo(12,-84);ctx.lineTo(22,-101);ctx.lineTo(33,-105);ctx.moveTo(22,-98);ctx.lineTo(18,-109);ctx.stroke();
+  }else if(chapter.id==='winter'){
+    // Frostfang Tyrant: ice-armored horned brute with a giant frost axe.
+    ctx.fillStyle='#456875';ctx.beginPath();ctx.ellipse(0,-31,25,37,0,0,TAU);ctx.fill();
+    ctx.fillStyle='#83b5c3';ctx.beginPath();ctx.arc(0,-70,21,0,TAU);ctx.fill();
+    ctx.fillStyle='#d7eef4';ctx.beginPath();ctx.moveTo(-16,-77);ctx.lineTo(-31,-101);ctx.lineTo(-7,-84);ctx.fill();ctx.beginPath();ctx.moveTo(16,-77);ctx.lineTo(31,-101);ctx.lineTo(7,-84);ctx.fill();
+    // ice armor shards
+    ctx.fillStyle='#719bab';ctx.beginPath();ctx.moveTo(-29,-52);ctx.lineTo(-42,-35);ctx.lineTo(-25,-26);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(29,-52);ctx.lineTo(42,-35);ctx.lineTo(25,-26);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#bfe8f2';ctx.beginPath();ctx.moveTo(-15,-48);ctx.lineTo(0,-60);ctx.lineTo(15,-48);ctx.lineTo(10,-25);ctx.lineTo(-10,-25);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#e9fbff';ctx.fillRect(-9,-74,5,4);ctx.fillRect(4,-74,5,4);
+    // frost axe
+    ctx.save();ctx.translate(26,-18);ctx.rotate(-.25-attack*.65);ctx.strokeStyle='#64727a';ctx.lineWidth=6;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(8,-53);ctx.stroke();ctx.fillStyle='#9de4f3';ctx.beginPath();ctx.moveTo(7,-54);ctx.lineTo(33,-66);ctx.lineTo(25,-43);ctx.lineTo(8,-38);ctx.closePath();ctx.fill();ctx.fillStyle='#e3fbff';ctx.beginPath();ctx.moveTo(9,-54);ctx.lineTo(25,-61);ctx.lineTo(19,-49);ctx.closePath();ctx.fill();ctx.restore();
+    // icy breath mist
+    ctx.fillStyle='rgba(205,240,249,.35)';ctx.beginPath();ctx.ellipse(-25,-61,13,6,0,0,TAU);ctx.fill();
+  }else if(chapter.id==='darkForest'){
+    // Shadowroot Lord: tall hooded forest wraith, deliberately not goblin-shaped.
+    ctx.fillStyle='#1c2721';ctx.beginPath();ctx.moveTo(-25,6);ctx.quadraticCurveTo(-18,-54,0,-82);ctx.quadraticCurveTo(20,-52,27,6);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#293b30';ctx.beginPath();ctx.moveTo(-23,-55);ctx.lineTo(0,-91);ctx.lineTo(24,-55);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#0f1613';ctx.beginPath();ctx.arc(0,-62,14,0,TAU);ctx.fill();
+    ctx.fillStyle='#b6e76e';ctx.shadowColor='#9fe75e';ctx.shadowBlur=7;ctx.fillRect(-9,-65,5,3);ctx.fillRect(4,-65,5,3);ctx.shadowBlur=0;
+    // root arms
+    ctx.strokeStyle='#3a2b24';ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(-17,-39);ctx.quadraticCurveTo(-36,-28,-40,-3);ctx.moveTo(17,-39);ctx.quadraticCurveTo(39,-30,42,-5);ctx.stroke();
+    ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-38,-6);ctx.lineTo(-50,2);ctx.moveTo(-38,-6);ctx.lineTo(-47,-16);ctx.moveTo(40,-8);ctx.lineTo(51,0);ctx.moveTo(40,-8);ctx.lineTo(48,-18);ctx.stroke();
+    // crooked staff with purple orb
+    ctx.save();ctx.translate(31,-7);ctx.rotate(.16-attack*.18);ctx.strokeStyle='#5a3d2d';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(0,12);ctx.lineTo(7,-65);ctx.lineTo(18,-78);ctx.stroke();ctx.fillStyle='#ac5fd0';ctx.shadowColor='#a954cf';ctx.shadowBlur=12;ctx.beginPath();ctx.arc(19,-80,7,0,TAU);ctx.fill();ctx.shadowBlur=0;ctx.restore();
+    // trailing roots
+    ctx.strokeStyle='#25352b';ctx.lineWidth=4;for(let i=-2;i<=2;i++){ctx.beginPath();ctx.moveTo(i*8,2);ctx.quadraticCurveTo(i*11,12,(i*12)+5,16);ctx.stroke();}
+  }else if(chapter.id==='volcanic'){
+    // Lava Golem: chunky rock construct with magma seams and huge fists.
+    ctx.fillStyle='#3b302e';ctx.beginPath();ctx.ellipse(0,-34,30,37,0,0,TAU);ctx.fill();
+    ctx.fillStyle='#4b3a34';ctx.beginPath();ctx.arc(0,-72,20,0,TAU);ctx.fill();
+    ctx.fillStyle='#312a29';ctx.beginPath();ctx.arc(-29,-32,18,0,TAU);ctx.arc(30,-31,18,0,TAU);ctx.fill();ctx.beginPath();ctx.arc(-35,-4,16,0,TAU);ctx.arc(36,-3,16,0,TAU);ctx.fill();
+    // magma cracks
+    ctx.strokeStyle='#ff7a2c';ctx.shadowColor='#ff6b22';ctx.shadowBlur=7;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-8,-83);ctx.lineTo(-2,-69);ctx.lineTo(-10,-54);ctx.lineTo(1,-39);ctx.lineTo(-6,-19);ctx.moveTo(16,-60);ctx.lineTo(7,-48);ctx.lineTo(16,-34);ctx.moveTo(-27,-38);ctx.lineTo(-18,-26);ctx.stroke();ctx.shadowBlur=0;
+    ctx.fillStyle='#ff9b37';ctx.fillRect(-9,-76,5,4);ctx.fillRect(4,-76,5,4);
+    // attack fist lift
+    ctx.save();ctx.translate(33,-17);ctx.rotate(-attack*.65);ctx.fillStyle='#443531';ctx.beginPath();ctx.arc(10,-8,14,0,TAU);ctx.fill();ctx.restore();
+    // shoulder lava vents
+    ctx.fillStyle='#6e4532';ctx.beginPath();ctx.moveTo(-30,-54);ctx.lineTo(-23,-78);ctx.lineTo(-15,-53);ctx.fill();ctx.beginPath();ctx.moveTo(30,-54);ctx.lineTo(23,-78);ctx.lineTo(15,-53);ctx.fill();
+  }else{
+    // Demon Archfiend: horned winged demon with a trident.
+    ctx.fillStyle='#5b2850';ctx.beginPath();ctx.ellipse(0,-34,25,39,0,0,TAU);ctx.fill();
+    ctx.fillStyle='#7e315b';ctx.beginPath();ctx.arc(0,-72,20,0,TAU);ctx.fill();
+    // wings
+    ctx.fillStyle='#351c38';ctx.beginPath();ctx.moveTo(-18,-50);ctx.lineTo(-57,-69);ctx.lineTo(-45,-35);ctx.lineTo(-62,-18);ctx.lineTo(-21,-24);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(18,-50);ctx.lineTo(57,-69);ctx.lineTo(45,-35);ctx.lineTo(62,-18);ctx.lineTo(21,-24);ctx.closePath();ctx.fill();
+    // horns
+    ctx.fillStyle='#251523';ctx.beginPath();ctx.moveTo(-13,-83);ctx.quadraticCurveTo(-28,-105,-37,-91);ctx.quadraticCurveTo(-25,-88,-18,-72);ctx.fill();ctx.beginPath();ctx.moveTo(13,-83);ctx.quadraticCurveTo(28,-105,37,-91);ctx.quadraticCurveTo(25,-88,18,-72);ctx.fill();
+    ctx.fillStyle='#ff4e81';ctx.shadowColor='#ff3f79';ctx.shadowBlur=9;ctx.fillRect(-9,-75,5,4);ctx.fillRect(4,-75,5,4);ctx.shadowBlur=0;
+    // armored legs/claws
+    ctx.strokeStyle='#2c172a';ctx.lineWidth=8;ctx.beginPath();ctx.moveTo(-10,-6);ctx.lineTo(-14,12);ctx.moveTo(10,-6);ctx.lineTo(14,12);ctx.stroke();
+    // trident
+    ctx.save();ctx.translate(27,-10);ctx.rotate(-.1-attack*.45);ctx.strokeStyle='#2d222d';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(0,12);ctx.lineTo(4,-65);ctx.stroke();ctx.strokeStyle='#d14775';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(4,-65);ctx.lineTo(-5,-78);ctx.moveTo(4,-65);ctx.lineTo(4,-82);ctx.moveTo(4,-65);ctx.lineTo(13,-78);ctx.stroke();ctx.restore();
+    if(e.enraged){ctx.strokeStyle='rgba(255,70,125,.7)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,-42,42+Math.sin(time*8)*3,0,TAU);ctx.stroke();}
+  }
+  ctx.restore();
+
+  const bw=78*s,bx=e.x-bw/2,by=groundY()-8-112*s;
+  ctx.fillStyle='rgba(30,14,18,.92)';rr(bx,by,bw,8,4);ctx.fill();
+  ctx.fillStyle='#e34e48';rr(bx,by,bw*clamp(e.hp/e.maxHp,0,1),8,4);ctx.fill();
+}
+
 function drawGoblin(e){
   const s=e.scale;
-  const season=litEnemySeason(e,SEASONS[e.seasonIndex ?? seasonIndexForWave(game.wave)]);
+  const season=litEnemySeason(e,chapterEnemyPalette(e,SEASONS[e.seasonIndex ?? seasonIndexForWave(game.wave)]));
+  const chapter=visualChapter();
   const carriesTorch=visual.night>.04&&!e.dead&&isTorchBearer(e);
 
   if(e.type==='flyer'){
@@ -1301,6 +1519,10 @@ function drawGoblin(e){
   }
   if(e.type==='dragon'){
     drawDragonBoss(e);
+    return;
+  }
+  if(e.type==='boss'){
+    drawChapterBoss(e);
     return;
   }
 
@@ -1394,11 +1616,11 @@ function drawGoblin(e){
 
   // torso armor/clothes
   if(e.type==='brute'){
-    ctx.fillStyle=season.id==='winter'?'#465766':season.id==='autumn'?'#65493a':'#5b4535';
+    ctx.fillStyle=season.id==='winter'?'#465766':season.id==='darkForest'?'#65493a':'#5b4535';
     ctx.beginPath();ctx.ellipse(0,-19,20,25,0,0,TAU);ctx.fill();
     ctx.fillStyle=season.id==='winter'?'#8999a4':'#757b70';ctx.fillRect(-17,-31,34,8);
   }else if(e.type==='shaman'){
-    ctx.fillStyle=season.id==='summer'?'#68432c':season.id==='winter'?'#384f64':'#45375f';
+    ctx.fillStyle=season.id==='volcanic'?'#68432c':season.id==='winter'?'#384f64':'#45375f';
     ctx.beginPath();ctx.ellipse(0,-19,17,24,0,0,TAU);ctx.fill();
   }else if(e.type==='builder'){
     const worker=ctx.createLinearGradient(-17,0,17,0);
@@ -1414,7 +1636,7 @@ function drawGoblin(e){
   }else if(e.type==='archer'){
     const archerCloth=ctx.createLinearGradient(-17,0,17,0);
     archerCloth.addColorStop(0,season.id==='winter'?'#263d4d':'#323c29');
-    archerCloth.addColorStop(.5,season.id==='autumn'?'#78523b':season.id==='summer'?'#6c5531':'#506044');
+    archerCloth.addColorStop(.5,season.id==='darkForest'?'#78523b':season.id==='volcanic'?'#6c5531':'#506044');
     archerCloth.addColorStop(1,season.id==='winter'?'#1f3340':'#293225');
     ctx.fillStyle=archerCloth;
     ctx.beginPath();ctx.ellipse(0,-19,17,24,0,0,TAU);ctx.fill();
@@ -1459,7 +1681,7 @@ function drawGoblin(e){
   // helmet variations
   if(e.type==='brute'||e.type==='boss'){
     ctx.fillStyle=e.type==='boss'
-      ?(season.id==='winter'?'#607484':season.id==='summer'?'#614437':'#514c46')
+      ?(season.id==='winter'?'#607484':season.id==='volcanic'?'#614437':'#514c46')
       :(season.id==='winter'?'#71808a':'#595d59');
     ctx.beginPath();ctx.arc(0,-54,18,Math.PI,TAU);ctx.lineTo(16,-47);ctx.lineTo(-16,-47);ctx.closePath();ctx.fill();
     ctx.fillStyle='#343634';ctx.fillRect(-18,-50,36,4);
@@ -1478,6 +1700,8 @@ function drawGoblin(e){
     ctx.beginPath();ctx.moveTo(-14,-47);ctx.lineTo(-23,-31);ctx.lineTo(-5,-39);ctx.closePath();ctx.fill();
   }
 
+  drawChapterEnemyDetails(e,chapter);
+
   // shield
   if(e.type!=='runner'&&e.type!=='shaman'&&e.type!=='builder'&&e.type!=='archer'){
     ctx.save();
@@ -1485,7 +1709,7 @@ function drawGoblin(e){
     ctx.rotate(-flinch*.32);ctx.scale(1-flinch*.14,1);
     ctx.fillStyle=e.type==='boss'
       ?season.bossAccent
-      :(season.id==='winter'?'#3e5969':season.id==='autumn'?'#6a4130':'#5a3527');
+      :(season.id==='winter'?'#3e5969':season.id==='darkForest'?'#6a4130':'#5a3527');
     ctx.beginPath();ctx.arc(0,0,16,0,TAU);ctx.fill();
     ctx.strokeStyle='#949b98';ctx.lineWidth=3;ctx.stroke();
     ctx.strokeStyle='#8f9692';ctx.lineWidth=3;
@@ -1500,7 +1724,7 @@ function drawGoblin(e){
   if(e.type==='shaman'){
     ctx.strokeStyle='#6a4d2d';ctx.lineWidth=4;
     ctx.beginPath();ctx.moveTo(21,-10);ctx.lineTo(31,13);ctx.stroke();
-    const orbCol=season.id==='winter'?'#84d8ff':season.id==='summer'?'#ff9d4e':season.id==='autumn'?'#c7749f':'#9f79d7';
+    const orbCol=season.id==='winter'?'#84d8ff':season.id==='volcanic'?'#ff9d4e':season.id==='darkForest'?'#c7749f':'#9f79d7';
     ctx.fillStyle=orbCol;ctx.shadowBlur=8;ctx.shadowColor=orbCol;
     ctx.beginPath();ctx.arc(21,-11,5,0,TAU);ctx.fill();ctx.shadowBlur=0;
   }else if(e.type==='builder'){
@@ -1625,18 +1849,29 @@ function drawGoblin(e){
 
     ctx.fillStyle=season.bossAccent;ctx.fillRect(-18,-28,36,7);
 
-    // unique seasonal boss silhouette accents
-    if(season.id==='summer'){
-      ctx.fillStyle='#dc7b35';
-      ctx.beginPath();ctx.moveTo(-22,-58);ctx.lineTo(-31,-70);ctx.lineTo(-18,-66);ctx.fill();
-    }else if(season.id==='autumn'){
-      ctx.fillStyle='#6e3445';
-      ctx.fillRect(-23,-31,5,18);
-      ctx.fillRect(18,-31,5,18);
+    // unique chapter boss silhouette accents
+    if(season.id==='greenlands'){
+      ctx.strokeStyle='#4f6f35';ctx.lineWidth=4;
+      ctx.beginPath();ctx.moveTo(-19,-66);ctx.lineTo(-30,-79);ctx.moveTo(18,-66);ctx.lineTo(31,-77);ctx.stroke();
+      ctx.fillStyle='#6f9b45';ctx.beginPath();ctx.arc(-31,-80,5,0,TAU);ctx.arc(32,-78,5,0,TAU);ctx.fill();
     }else if(season.id==='winter'){
       ctx.fillStyle='#9bd6ea';
-      ctx.beginPath();ctx.moveTo(-12,-72);ctx.lineTo(-7,-88);ctx.lineTo(-2,-72);ctx.fill();
-      ctx.beginPath();ctx.moveTo(4,-72);ctx.lineTo(10,-90);ctx.lineTo(14,-72);ctx.fill();
+      ctx.beginPath();ctx.moveTo(-12,-72);ctx.lineTo(-7,-91);ctx.lineTo(-2,-72);ctx.fill();
+      ctx.beginPath();ctx.moveTo(4,-72);ctx.lineTo(10,-93);ctx.lineTo(14,-72);ctx.fill();
+      ctx.strokeStyle='#dff7ff';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,-48,25,0,TAU);ctx.stroke();
+    }else if(season.id==='darkForest'){
+      ctx.fillStyle='#583d59';ctx.fillRect(-24,-32,6,20);ctx.fillRect(18,-32,6,20);
+      ctx.fillStyle='#9cb56c';ctx.fillRect(-10,-55,5,3);ctx.fillRect(5,-55,5,3);
+    }else if(season.id==='volcanic'){
+      ctx.fillStyle='#dc7034';
+      ctx.beginPath();ctx.moveTo(-23,-58);ctx.lineTo(-34,-73);ctx.lineTo(-18,-67);ctx.fill();
+      ctx.beginPath();ctx.moveTo(23,-58);ctx.lineTo(34,-73);ctx.lineTo(18,-67);ctx.fill();
+      ctx.strokeStyle='#ff8a32';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-15,-38);ctx.lineTo(-4,-29);ctx.lineTo(-9,-18);ctx.moveTo(15,-39);ctx.lineTo(5,-31);ctx.stroke();
+    }else if(season.id==='demonic'){
+      ctx.fillStyle='#8f335f';
+      ctx.beginPath();ctx.moveTo(-13,-69);ctx.lineTo(-26,-91);ctx.lineTo(-6,-75);ctx.fill();
+      ctx.beginPath();ctx.moveTo(13,-69);ctx.lineTo(26,-91);ctx.lineTo(6,-75);ctx.fill();
+      ctx.fillStyle='#ff4e79';ctx.shadowColor='#ff4e79';ctx.shadowBlur=7;ctx.fillRect(-9,-55,5,3);ctx.fillRect(4,-55,5,3);ctx.shadowBlur=0;
     }
   }
 

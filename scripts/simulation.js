@@ -76,7 +76,7 @@ function spawnEnemy(force){
   if(e.type==='boss'||e.type==='dragon'){
     game.boss=e;
     game.shake=6;
-    showMsg('👑 ВЕЛИКИЙ ГОБЛІН-ВОЄВОДА!');
+    showMsg(`👑 ${CHAPTER_THEMES[e.seasonIndex].bossName}!`);
   }
 }
 
@@ -93,6 +93,10 @@ function nextWave(){
   // Slightly less free gold than V3, but still enough to keep upgrades flowing.
   const bonus=28+game.wave*4+game.waveGoldBonus;
   game.gold+=bonus;
+  if(game.waveRepair){
+    game.gateHp=Math.min(game.gateMax,game.gateHp+game.gateMax*.08);
+    game.towerHp=Math.min(game.towerMax,game.towerHp+game.towerMax*.05);
+  }
 
   chooseWaveEvent();
 
@@ -100,8 +104,8 @@ function nextWave(){
   const s=currentSeason();
 
   if(newSeason!==oldSeason){
-    showWave(`${s.icon} ${s.name.toUpperCase()}`);
-    showMsg(`${s.icon} Починається ${s.name.toLowerCase()} — новий клан гоблінів`);
+    showWave(s.chapter.toUpperCase());
+    showMsg(`${s.icon} ${s.chapter}`);
   }else{
     showWave(`ХВИЛЯ ${game.wave}`);
     showMsg(`🪙 Бонус за хвилю +${bonus}`);
@@ -114,6 +118,9 @@ function damageEnemy(e,dmg,color='#fff',source='generic'){
 
   if(e.type==='armored'&&source==='arrow')dmg*=.48;
   if(e.type==='ram'&&source==='arrow')dmg*=.72;
+  if(game.siegeHunter&&['ballista','catapult'].includes(source)&&['catapult','ram'].includes(e.type))dmg*=1.75;
+  if(game.bossExecutioner&&source==='arrow'&&e.type==='boss')dmg*=1.50;
+  if(game.lastStand&&game.gateHp/game.gateMax<.35)dmg*=1.35;
 
   dmg*=1+game.damageBonus;
   e.hp-=dmg;
@@ -129,18 +136,19 @@ function damageEnemy(e,dmg,color='#fff',source='generic'){
     e.dead=true;
     e.death=.38;
     game.gold+=Math.round(e.reward*(1+game.goldBonus));
+    if(game.siegeHunter&&['catapult','ram'].includes(e.type))game.gold+=18;
     game.kills++;
     if(!['undead','dragon'].includes(e.type))game.corpseSouls++;
     burst(e.x,e.y-28,'#809f43',14,e.type==='boss'?145:85);
     burst(e.x,e.y-24,'#5c3b27',8,70);
-    if(e.type==='boss'||e.type==='dragon'){
+    if(e.type==='boss'){
       game.boss=null;
-      game.gold+=e.type==='dragon'?240:120;
-      game.flash=.18;
-      game.shake=10;
-      game.rewardPending=true;
-      showMsg(e.type==='dragon'?'🐉 Дракона переможено!':'👑 Боса переможено!');
+      game.gold+=140;
+      game.flash=.18;game.shake=10;game.rewardPending=true;
+      showMsg(`👑 ${CHAPTER_THEMES[e.seasonIndex].bossName} переможений!`);
       setTimeout(()=>{ if(game.rewardPending&&!game.gameOver){game.rewardPending=false;showBossReward();} },250);
+    }else if(e.type==='dragon'){
+      game.boss=null;
     }
     updateShop();
   }
@@ -276,6 +284,7 @@ function update(dt){
   game.oilPour=Math.max(0,(game.oilPour||0)-dt);
   game.archerSlow=Math.max(0,game.archerSlow-dt);
   game.knightCooldown=Math.max(0,game.knightCooldown-dt);
+  game.cavalryCooldown=Math.max(0,game.cavalryCooldown-dt);
   game.ballistaKick=Math.max(0,game.ballistaKick-dt*3.6);
   game.catapultKick=Math.max(0,game.catapultKick-dt*2.5);
 
@@ -297,14 +306,12 @@ function update(dt){
   if(game.spawned<game.waveTotal){
     game.spawnTimer-=dt;
     if(game.spawnTimer<=0){
-      const seasonBoss=(game.wave%4===0&&game.spawned===game.waveTotal-1);
-      const dragonBoss=(game.wave%16===0&&game.spawned===game.waveTotal-1);
-      const miniBoss=(!seasonBoss&&game.wave>=6&&game.wave%2===0&&game.spawned===game.waveTotal-1);
-
-      let force=dragonBoss?'dragon':seasonBoss?'boss':miniBoss?'miniboss':'normal';
+      // Exactly one chapter boss, always the final spawn of waves 10/20/30/...
+      const chapterBoss=(game.wave%10===0&&game.spawned===game.waveTotal-1);
+      let force=chapterBoss?'boss':'normal';
       const builderMoment=Math.max(2,Math.floor(game.waveTotal*.24));
       if(
-        !seasonBoss && !dragonBoss &&
+        !chapterBoss &&
         game.wave>=12 &&
         game.river &&
         !game.bridge.active &&
@@ -434,6 +441,45 @@ function update(dt){
     if(knights[i].dead&&knights[i].death<=0)knights.splice(i,1);
   }
 
+  // Mounted sortie: ignores the front line, circles behind enemy catapults,
+  // strikes from their right side, then returns through the castle gate.
+  for(const rider of cavalry){
+    rider.y=groundY()-6;
+    rider.attackTimer-=dt;
+    rider.attackAnim=Math.max(0,rider.attackAnim-dt*4.5);
+    const target=rider.target;
+    if(!target||target.dead||target.type!=='catapult')rider.mode='return';
+
+    if(rider.mode==='charge'){
+      const flankX=target.x+BALANCE.cavalry.flankDistance+rider.slot*58;
+      rider.facing=1;
+      const step=Math.min(BALANCE.cavalry.speed*dt,Math.max(0,flankX-rider.x));
+      rider.x+=step;rider.phase+=step*.11;
+      if(rider.x>=flankX-1){rider.mode='attack';rider.facing=-1;rider.attackTimer=Math.min(rider.attackTimer,.18);}
+    }else if(rider.mode==='attack'){
+      const attackX=target.x+38+rider.slot*58;
+      const dx=attackX-rider.x;
+      rider.facing=dx>=0?1:-1;
+      if(Math.abs(dx)>5){
+        const step=Math.sign(dx)*Math.min(BALANCE.cavalry.speed*.42*dt,Math.abs(dx));
+        rider.x+=step;rider.phase+=Math.abs(step)*.11;
+      }else if(rider.attackTimer<=0){
+        rider.facing=-1;rider.attackAnim=1;
+        damageEnemy(target,BALANCE.cavalry.damage*(game.cavalrySaboteur?1.6:1),'#ffe5a0','cavalry');
+        burst(target.x,target.y-28,'#d8c3a0',5,52,105);
+        emitVisual('spark',target.x+12,target.y-36,7,'#ffe6a5');
+        rider.attackTimer=BALANCE.cavalry.attackCooldown;
+        if(target.dead)rider.mode='return';
+      }
+    }else{
+      rider.facing=-1;
+      const step=BALANCE.cavalry.returnSpeed*dt;
+      rider.x-=step;rider.phase+=step*.11;
+      if(rider.x<gateX()+8)rider.done=true;
+    }
+  }
+  for(let i=cavalry.length-1;i>=0;i--)if(cavalry[i].done)cavalry.splice(i,1);
+
   // river
   if(game.river){
     const maxAlligators=Math.min(4,1+Math.floor(game.riverLevel/2));
@@ -455,7 +501,8 @@ function update(dt){
         if(near){
           a.facing=near.x>=a.x?1:-1;
           a.biteAnim=1;
-          damageEnemy(near,14+game.riverLevel*5.5,'#d3f77f');
+          damageEnemy(near,(14+game.riverLevel*5.5)*(game.moatFeast?1.45:1),'#d3f77f');
+          if(game.moatFeast)game.gateHp=Math.min(game.gateMax,game.gateHp+2);
           near.wet=1.0;
           a.bite=Math.max(.82,1.55-game.riverLevel*.08);
           burst(near.x,groundY()+3,'#79d6ed',11,68,120);
@@ -486,7 +533,13 @@ function update(dt){
         lightnings.push({x1:c.x,y1:c.y+18,x2:e.x,y2:e.y-40*e.scale,life:.13});
         damageEnemy(e,26+game.mageLevel*11,'#e7f0ff','magic');
         burst(e.x,e.y-35,'#e9f4ff',9,105,80);
-        game.flash=.10;
+        if(game.stormChain){
+          const chain=near.filter(n=>n!==e&&!n.dead).sort((a,b)=>Math.abs(a.x-e.x)-Math.abs(b.x-e.x))[0];
+          if(chain){
+            lightnings.push({x1:e.x,y1:e.y-40*e.scale,x2:chain.x,y2:chain.y-40*chain.scale,life:.11});
+            damageEnemy(chain,18+game.mageLevel*8,'#bfe9ff','magic');
+          }
+        }
       }
       c.strike=rand(.38,.72);
     }
@@ -513,7 +566,8 @@ function update(dt){
     }else{
       const e=a.target;
       if(e&&!e.dead&&Math.hypot(a.x-e.x,a.y-(e.y-42*e.scale))<28*e.scale){
-        damageEnemy(e,a.damage*(a.crit?game.critDamage:1),a.crit?'#fff06a':'#ffe6a2','arrow');
+        damageEnemy(e,a.damage*(a.crit?game.critDamage:1),a.crit?'#fff06a':'#ffe6a2',a.source||'arrow');
+        if(game.explosiveArrows&&Math.random()<.25)e.burning=Math.max(e.burning,2.4);
         burst(a.x,a.y,'#e6d1a7',5,45,90);
         a.life=0;
       }
@@ -639,6 +693,41 @@ function update(dt){
       });
       addText(e.x,e.y-76,'☠','#caa2ff',17);
       e.specialTimer=6.0;
+    }
+
+    // One lightweight signature ability for each chapter boss.
+    if(e.type==='boss'){
+      const bossTheme=CHAPTER_THEMES[e.seasonIndex];
+      if(bossTheme.id==='demonic'&&!e.enraged&&e.hp/e.maxHp<.45){
+        e.enraged=true;e.speed*=1.22;e.damage*=1.28;
+        addText(e.x,e.y-105,'ENRAGED','#ff5a86',16);burst(e.x,e.y-45,'#d13d6e',18,90,90);
+      }
+      if(e.specialTimer<=0){
+        if(bossTheme.id==='greenlands'){
+          const heal=e.maxHp*.045;e.hp=Math.min(e.maxHp,e.hp+heal);
+          addText(e.x,e.y-100,`+${Math.round(heal)}`,'#9bd872',13);
+          e.specialTimer=5.2;
+        }else if(bossTheme.id==='winter'){
+          game.archerSlow=Math.max(game.archerSlow,3.6);
+          addText(e.x,e.y-102,'FROST','#bcecff',14);burst(e.x,e.y-45,'#a9e5ff',14,70,60);
+          e.specialTimer=6.0;
+        }else if(bossTheme.id==='darkForest'){
+          for(let n=0;n<2;n++){
+            const u=enemyStats('runner');
+            enemies.push({...u,x:e.x+55+n*34,y:groundY()-7,hp:u.hp,maxHp:u.hp,attackTimer:.7,hurt:0,wet:0,burning:0,dead:false,phase:rand(0,TAU),attackAnim:0,death:0,stun:0,building:false,builderDone:false,ranged:false,rangedTimer:1,rangedAnim:0,specialTimer:4,flying:false,seasonIndex:e.seasonIndex});
+          }
+          addText(e.x,e.y-102,'SHADOW PACK','#b3c58a',13);e.specialTimer=7.2;
+        }else if(bossTheme.id==='volcanic'){
+          const hit=Math.max(16,e.damage*.45);
+          game.towerHp=Math.max(0,game.towerHp-hit);
+          addText(castleX()+125,groundY()-305,`-${Math.round(hit)}`,'#ff9a57',13);game.shake=5;
+          e.specialTimer=5.6;
+        }else if(bossTheme.id==='demonic'){
+          game.gateHp=Math.max(0,game.gateHp-e.damage*.28);
+          addText(gateX(),groundY()-112,'CURSE','#ff6b9a',13);e.specialTimer=5.0;
+          if(game.gateHp<=0){game.gateHp=0;endGame();}
+        }
+      }
     }
 
     if(e.type==='catapult'){

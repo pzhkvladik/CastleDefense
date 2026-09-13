@@ -19,6 +19,16 @@ const BALANCE=Object.freeze({
     projectileSpeedMultiplier:1.25,
     critBonus:.15,
     critMax:.75
+  }),
+  cavalry:Object.freeze({
+    cost:260,
+    cooldown:24,
+    count:2,
+    speed:188,
+    returnSpeed:158,
+    damage:68,
+    attackCooldown:.72,
+    flankDistance:50
   })
 });
 

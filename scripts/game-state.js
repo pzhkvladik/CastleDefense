@@ -1,5 +1,5 @@
 function newGame(){
-  enemies.length=0;arrows.length=0;enemyArrows.length=0;stones.length=0;knights.length=0;particles.length=0;texts.length=0;
+  enemies.length=0;arrows.length=0;enemyArrows.length=0;stones.length=0;knights.length=0;cavalry.length=0;particles.length=0;texts.length=0;
   clouds.length=0;lightnings.length=0;alligators.length=0;birds.length=0;
   archerTimers=[0,0,0];
 
@@ -17,10 +17,12 @@ function newGame(){
     catapult:0,catapultTimer:0,
     oil:0,oilCooldown:0,oilPour:0,
     traps:0,trapCooldown:0,
-    knightLevel:0,knightCooldown:0,
+    knightLevel:0,knightCooldown:0,cavalryCooldown:0,
     castleLevel:1,techLevel:0,
     critChance:.08,critDamage:1.75,
     goldBonus:0,damageBonus:0,rangeBonus:0,waveGoldBonus:0,
+    explosiveArrows:false,siegeHunter:false,stormChain:false,moatFeast:false,
+    waveRepair:false,lastStand:false,bossExecutioner:false,cavalrySaboteur:false,
     perks:{},
     ballistaKick:0,catapultKick:0,
     towerDestroyedNotified:false,
@@ -85,10 +87,10 @@ function burst(x,y,color,n=10,spd=90,gravity=180){
 
 
 function chooseWaveEvent(){
-  game.eliteWave=(game.wave%7===0);
-  game.goldWave=(game.wave%10===0);
+  game.eliteWave=(game.wave%7===0 && game.wave%10!==0);
+  // Chapter-ending waves are reserved for bosses. No old 10-wave gold/bonus event.
+  game.goldWave=false;
 
-  if(game.goldWave){game.event='gold';return;}
   if(game.eliteWave){game.event='elite';return;}
 
   const r=Math.random();
@@ -138,57 +140,68 @@ function updatePerkHUD(){
 function showBossReward(){
   const pool=[
     {
-      key:'walls',icon:'🧱',name:'Міцні мури',
-      desc:'+12% максимального HP воріт.',
-      apply:()=>{const gain=Math.round(game.gateMax*.12);game.gateMax+=gain;game.gateHp+=gain}
+      key:'explosiveArrows',icon:'🔥',name:'Палаючі стріли',
+      desc:'Стріли мають 25% шанс підпалити ворога на кілька секунд.',
+      unique:true,apply:()=>game.explosiveArrows=true
     },
     {
-      key:'damage',icon:'⚔️',name:'Бойова школа',
-      desc:'+10% до шкоди всіх захисників.',
-      apply:()=>game.damageBonus+=.10
+      key:'siegeHunter',icon:'🎯',name:'Мисливець на облогу',
+      desc:'Балліста й катапульта завдають +75% шкоди ворожим катапультам і таранам.',
+      unique:true,apply:()=>game.siegeHunter=true
     },
     {
-      key:'gold',icon:'💰',name:'Скарбник',
-      desc:'+12% золота з кожного вбитого ворога.',
-      apply:()=>game.goldBonus+=.12
+      key:'stormChain',icon:'⚡',name:'Ланцюгова буря',
+      desc:'Кожен удар мага додатково б’є ще одну сусідню ціль.',
+      unique:true,apply:()=>game.stormChain=true
     },
     {
-      key:'crit',icon:'🎯',name:'Орлине око',
-      desc:'+5% шанс критичного пострілу лучників.',
-      apply:()=>game.critChance=Math.min(.55,game.critChance+.05)
+      key:'moatFeast',icon:'🐊',name:'Кривавий рів',
+      desc:'Алігатори кусають на 45% сильніше й трохи лікують ворота при влучанні.',
+      unique:true,apply:()=>game.moatFeast=true
     },
     {
-      key:'towers',icon:'🗼',name:'Сталеві вежі',
-      desc:'+18% максимального HP башт.',
-      apply:()=>{const gain=Math.round(game.towerMax*.18);game.towerMax+=gain;game.towerHp+=gain}
+      key:'waveRepair',icon:'🔨',name:'Королівські ремонтники',
+      desc:'Після кожної хвилі ворота відновлюють 8% HP, артилерія — 5%.',
+      unique:true,apply:()=>game.waveRepair=true
     },
     {
-      key:'speed',icon:'⚡',name:'Швидкі руки',
-      desc:'Лучники стріляють приблизно на 8% швидше.',
-      apply:()=>game.techLevel+=1
+      key:'lastStand',icon:'🛡️',name:'Останній рубіж',
+      desc:'Коли ворота нижче 35% HP, усі захисники завдають +35% шкоди.',
+      unique:true,apply:()=>game.lastStand=true
     },
     {
-      key:'income',icon:'👑',name:'Королівська казна',
-      desc:'+8 золота після кожної завершеної хвилі.',
-      apply:()=>game.waveGoldBonus+=8
+      key:'bossExecutioner',icon:'👑',name:'Кат королів',
+      desc:'Лучники завдають босам на 50% більше шкоди.',
+      unique:true,apply:()=>game.bossExecutioner=true
     },
     {
-      key:'traps',icon:'🪤',name:'Майстер пасток',
-      desc:'+1 рівень дорожніх пасток.',
-      apply:()=>game.traps=Math.min(4,game.traps+1)
+      key:'cavalrySaboteur',icon:'🐎',name:'Рейдери-саботажники',
+      desc:'Кавалерія завдає ворожим катапультам +60% шкоди.',
+      unique:true,apply:()=>game.cavalrySaboteur=true
+    },
+    {
+      key:'artilleryCore',icon:'🏹',name:'Серце артилерії',
+      desc:'+30% максимуму HP артилерійських платформ і повне відновлення.',
+      unique:true,apply:()=>{game.towerMax=Math.round(game.towerMax*1.30);game.towerHp=game.towerMax}
+    },
+    {
+      key:'warChest',icon:'💰',name:'Військова скарбниця',
+      desc:'+20% золота з ворогів і +120 золота одразу.',
+      unique:true,apply:()=>{game.goldBonus+=.20;game.gold+=120}
     }
   ];
 
+  let available=pool.filter(p=>!p.unique||!game.perks[p.key]);
+  if(available.length<3)available=pool;
   const picks=[];
-  const used=new Set();
-  while(picks.length<3){
-    const idx=Math.floor(Math.random()*pool.length);
-    if(!used.has(idx)){used.add(idx);picks.push(pool[idx]);}
+  const copy=[...available];
+  while(picks.length<3&&copy.length){
+    const idx=Math.floor(Math.random()*copy.length);
+    picks.push(copy.splice(idx,1)[0]);
   }
 
   const root=document.getElementById('rewardChoices');
   root.innerHTML='';
-
   picks.forEach((p)=>{
     const b=document.createElement('button');
     b.className='rewardChoice';
@@ -198,13 +211,10 @@ function showBossReward(){
       addPerk(p.key,p.icon,p.name,p.desc);
       game.pausedForReward=false;
       document.getElementById('rewardOverlay').classList.remove('show');
-      updateShop();
-      syncHUD();
-      showMsg(`🎁 ${p.name}`);
+      updateShop();syncHUD();showMsg(`🎁 ${p.name}`);
     };
     root.appendChild(b);
   });
-
   game.pausedForReward=true;
   document.getElementById('rewardOverlay').classList.add('show');
 }

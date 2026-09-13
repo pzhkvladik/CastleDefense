@@ -3,7 +3,7 @@
 const VISUAL_LIMIT=220;
 const visual={clock:0,seed:7291,particles:[],units:new WeakMap(),
   archers:[-99,-99,-99],ballista:-99,catapult:-99,mage:-99,
-  weights:[1,0,0,0],palette:null,gateHp:0,towerHp:0,smokeTimer:0,night:0,torchSerial:0};
+  weights:[1,0,0,0,0],palette:null,gateHp:0,towerHp:0,smokeTimer:0,night:0,torchSerial:0,weatherClock:0,moatBuild:null};
 function resetVisuals(){
   visual.clock=0;visual.seed=7291;visual.particles.length=0;
   visual.units=new WeakMap();visual.archers=[-99,-99,-99];
@@ -11,7 +11,7 @@ function resetVisuals(){
   visual.weights=SEASONS.map((_,i)=>i===seasonIndexForWave(game.wave)?1:0);
   visual.palette=null;visual.gateHp=game.gateHp;visual.towerHp=game.towerHp;
   visual.smokeTimer=0;
-  visual.night=game.event==='night'?1:0;visual.torchSerial=0;nightLights.length=0;
+  visual.night=game.event==='night'?1:0;visual.torchSerial=0;visual.weatherClock=0;visual.moatBuild=null;nightLights.length=0;
 }
 function visualRand(a=0,b=1){
   visual.seed=(Math.imul(visual.seed,1664525)+1013904223)>>>0;
@@ -70,26 +70,35 @@ function visualHit(e,source){
 }
 function seasonColor(colors){
   const rgb=[0,0,0];
-  colors.forEach((hex,i)=>{const n=parseInt(hex.slice(1),16);
-    rgb[0]+=(n>>16)*visual.weights[i];rgb[1]+=((n>>8)&255)*visual.weights[i];rgb[2]+=(n&255)*visual.weights[i];});
+  visual.weights.forEach((weight,i)=>{
+    const hex=colors[i]||colors[colors.length-1]||'#777777';
+    const n=parseInt(hex.slice(1),16);
+    rgb[0]+=(n>>16)*weight;rgb[1]+=((n>>8)&255)*weight;rgb[2]+=(n&255)*weight;
+  });
   return `rgb(${rgb.map(Math.round).join(',')})`;
 }
 function visualSeason(){
   if(!visual.palette){
-    const p={...currentSeason(),winter:visual.weights[3],autumn:visual.weights[2]};
+    const chapter=currentSeason();
+    const p={...chapter,winter:chapter.id==='winter'?1:0};
     for(const key of ['skyTop','skyMid','skyLow','skyBottom','hill','hill2','ground1','ground2','treeA','treeB'])
-      p[key]=nightColor(seasonColor(SEASONS.map(s=>s[key])),NIGHT_PALETTE[key]);
+      p[key]=nightColor(chapter[key],NIGHT_PALETTE[key]);
     visual.palette=p;
   }
   return visual.palette;
 }
 function updateVisuals(realDt){
   if(game.gameOver||game.pausedForReward)return;
+  visual.weatherClock+=clamp(realDt,0,.05);
+  if(visual.moatBuild){
+    visual.moatBuild.t+=clamp(realDt,0,.05);
+    if(visual.moatBuild.t>=13.4)visual.moatBuild=null;
+  }
   const dt=clamp(realDt,0,.05)*Math.min(gameSpeed,2);
   visual.clock+=dt;
   visual.night=lerp(visual.night,game.event==='night'?1:0,1-Math.exp(-dt/1.15));
-  const season=seasonIndexForWave(game.wave),blend=1-Math.exp(-dt/1.7);
-  visual.weights=visual.weights.map((w,i)=>lerp(w,i===season?1:0,blend));
+  const chapter=seasonIndexForWave(game.wave),blend=1-Math.exp(-dt/1.7);
+  visual.weights=visual.weights.map((w,i)=>lerp(w,i===chapter?1:0,blend));
   visual.palette=null;
   for(let i=visual.particles.length-1;i>=0;i--){
     const p=visual.particles[i];p.life-=dt;
@@ -98,7 +107,7 @@ function updateVisuals(realDt){
     if(!['dust','smoke','magic'].includes(p.kind))p.vy+=260*dt;
   }
   const rb=riverBounds();
-  for(const e of [...enemies,...knights]){
+  for(const e of [...enemies,...knights,...cavalry]){
     const v=unitVisual(e),distance=Math.abs(e.x-v.x);v.x=e.x;
     v.moving=lerp(v.moving,!e.dead&&!e.flying&&distance>.01?1:0,1-Math.exp(-dt*18));
     // Stride comes from distance travelled, not an idle combat timer.
@@ -140,7 +149,7 @@ function drawVisualParticles(groundLayer=false){
   }
   ctx.restore();
 }
-function drawSeasonMotes(foreground=false){
+function drawChapterMotes(foreground=false){
   const s=visualSeason(),count=foreground?18:32;
   ctx.save();
   for(let i=0;i<count;i++){
@@ -151,11 +160,6 @@ function drawSeasonMotes(foreground=false){
     if(s.winter>.005){
       ctx.globalAlpha=s.winter*(foreground?.62:.42);ctx.fillStyle='#f1f8fa';
       ctx.beginPath();ctx.arc(x+Math.sin(visual.clock+i)*7,y,r,0,TAU);ctx.fill();
-    }
-    if(s.autumn>.005){
-      ctx.globalAlpha=s.autumn*(foreground?.65:.36);ctx.fillStyle=i%2?'#da9d45':'#b56d39';
-      ctx.save();ctx.translate(x,y);ctx.rotate(visual.clock*.8+i);
-      ctx.beginPath();ctx.ellipse(0,0,r*2.2,r*.8,0,0,TAU);ctx.fill();ctx.restore();
     }
   }
   ctx.restore();

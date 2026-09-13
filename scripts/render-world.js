@@ -76,7 +76,7 @@ function drawSky(){
   }
   ctx.lineTo(W,gy);ctx.lineTo(0,gy);ctx.fill();
 
-  // seasonal tree line
+  // chapter-themed tree line
   for(let x=-12,idx=0;x<W+30;x+=30,idx++){
     const th=28+hash01(idx+251)*42;
     ctx.fillStyle=idx%2?s.treeA:s.treeB;
@@ -104,9 +104,9 @@ function drawSky(){
 
   // road
   const road=ctx.createLinearGradient(gateX()-30,0,W,0);
-  road.addColorStop(0,nightColor(seasonColor(['#755e45','#755e45','#6d5540','#706a61']),'#353d45'));
-  road.addColorStop(.5,nightColor(seasonColor(['#927b59','#927b59','#8f6c4b','#9b958a']),'#444d55'));
-  road.addColorStop(1,nightColor(seasonColor(['#69553f','#69553f','#5b4838','#665f57']),'#293641'));
+  road.addColorStop(0,nightColor(seasonColor(['#755e45','#7a756d','#4b453b','#4f3a31','#3b2737']),'#353d45'));
+  road.addColorStop(.5,nightColor(seasonColor(['#927b59','#aaa69d','#5f5849','#6b4a38','#54334f']),'#444d55'));
+  road.addColorStop(1,nightColor(seasonColor(['#69553f','#77736d','#3d382f','#432f29','#332130']),'#293641'));
   ctx.fillStyle=road;
   ctx.beginPath();
   ctx.moveTo(gateX()-22,gy-8);
@@ -125,20 +125,10 @@ function drawSky(){
     ctx.fillRect(px,py,sw,sh);
   }
 
-  // seasonal ground detail
+  // chapter-themed ground detail
   ctx.save();
-  if(s.autumn>.005){
-    ctx.globalAlpha=s.autumn;
-    for(let i=0;i<34;i++){
-      const px=hash01(i+5100)*W;
-      const py=gy+hash01(i+5300)*Math.max(8,H-gy);
-      ctx.fillStyle=i%2?'rgba(151,79,37,.60)':'rgba(194,119,48,.55)';
-      ctx.save();ctx.translate(px,py);ctx.rotate(hash01(i+5500)*2);
-      ctx.fillRect(-2,-1,5,3);ctx.restore();
-    }
-  }
-  if(s.winter+s.autumn<.995){
-    ctx.globalAlpha=1-s.winter-s.autumn;
+  if(s.winter<.995){
+    ctx.globalAlpha=1-s.winter;
     ctx.strokeStyle='#2d4029';ctx.lineWidth=1.3;
     for(let i=0;i<82;i++){
       const x=hash01(i+2100)*W;
@@ -253,7 +243,7 @@ function drawInnerCity(x,gy){
     ctx.fillRect(hx,by-24,h.w,4);
 
     // roof
-    ctx.fillStyle=nightColor(seasonColor([h.roof,h.roof,h.roof,'#665f61']),'#342f3e');
+    ctx.fillStyle=nightColor(seasonColor([h.roof,'#667079','#4e433f','#714434','#5b344f']),'#342f3e');
     ctx.beginPath();
     ctx.moveTo(hx-7,by-h.h);
     ctx.lineTo(hx+h.w*.5,by-h.h-28);

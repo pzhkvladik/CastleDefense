@@ -180,11 +180,17 @@ function draw(){
   prepareNightLights();
   // Everything architectural/environmental remains rock solid.
   drawSky();
+  drawChapterEnvironment();
+  drawBossChapterEffects(true);
+  drawStormBackdrop();
   drawRiver();
   drawRoadTraps();
+  drawStormPuddles();
   drawNightRoadLights();
-  drawSeasonMotes(false);
+  drawChapterMotes(false);
   drawCastle();
+  drawMoatConstruction();
+  drawStormRain(false);
   drawContactShadows();
   drawVisualParticles(true);
   for(const k of knights)drawKnight(k);
@@ -202,6 +208,8 @@ function draw(){
 
   const sorted=[...enemies].sort((a,b)=>a.y-b.y);
   for(const e of sorted)drawGoblin(e);
+  for(const rider of cavalry)drawMountedRaider(rider);
+  drawBossChapterEffects(false);
 
   for(const a of arrows)drawArrow(a);
   for(const a of enemyArrows)drawEnemyArrow(a);
@@ -211,7 +219,8 @@ function draw(){
   drawVisualParticles(false);
   ctx.restore();
 
-  drawSeasonMotes(true);
+  drawChapterMotes(true);
+  drawStormRain(true);
   drawWavePause();
 
   // random event atmosphere
@@ -221,11 +230,6 @@ function draw(){
     fg.addColorStop(.6,'rgba(220,228,224,.15)');
     fg.addColorStop(1,'rgba(220,228,224,.25)');
     ctx.fillStyle=fg;ctx.fillRect(0,0,W,H);
-  }else if(game.event==='storm'){
-    ctx.fillStyle='rgba(31,45,62,.20)';ctx.fillRect(0,0,W,H);
-    if(Math.sin(time*7)>.985){
-      ctx.fillStyle='rgba(235,246,255,.16)';ctx.fillRect(0,0,W,H);
-    }
   }else if(game.event==='blizzard'){
     ctx.fillStyle='rgba(220,235,240,.10)';ctx.fillRect(0,0,W,H);
   }else if(game.event==='elite'){
@@ -240,7 +244,8 @@ function draw(){
   ctx.fillStyle=vg;ctx.fillRect(0,0,W,H);
 
   if(game.flash>0){
-    ctx.fillStyle=`rgba(235,245,255,${game.flash*.75})`;
+    const comfort=game.event==='storm'?.34:1;
+    ctx.fillStyle=`rgba(235,245,255,${game.flash*.75*comfort})`;
     ctx.fillRect(0,0,W,H);
   }
 }
